@@ -8,6 +8,7 @@ require "scanf"
 
 
 module SCrypt
+  
   module Errors
     class InvalidSalt   < StandardError; end  # The salt parameter provided is invalid.
     class InvalidHash   < StandardError; end  # The hash parameter provided is invalid.
@@ -63,13 +64,15 @@ module SCrypt
 
     # Returns the cost value which will result in computation limits less than the given options.
     #
+    # Options:
+    # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
+    # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
+    # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
+    #
     # Example:
     #
     #   # should take less than 200ms
     #   SCrypt.calibrate(:max_time => 0.2)
-    #
-    #   # should take less than 1000ms
-    #   SCrypt.calibrate(:max_time => 1)
     #
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
@@ -129,6 +132,7 @@ module SCrypt
       #
       # Example:
       #   @password = SCrypt::Password.create("my secret", :max_time => 0.25)
+      #
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
         salt = SCrypt::Engine.generate_salt(options)
