@@ -1,0 +1,19 @@
+= scrypt
+
+The scrypt key derivation function is designed to be far more secure against hardware brute-force attacks than alternative functions such as PBKDF2 or bcrypt.
+
+* http://www.tarsnap.com/scrypt.html
+* http://github.com/pbhogan/scrypt
+
+== Why you should use scrypt
+
+Coming soon.
+
+== How to install bcrypt
+
+  gem install scrypt
+
+== How to use scrypt
+
+Coming soon. It works pretty similarly to ruby-bcrypt.
+
