@@ -16,6 +16,8 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   EOF
 
+  s.add_development_dependency "rspec"
+
   s.rubyforge_project = "scrypt"
 
   s.extensions = ["ext/mri/extconf.rb"]
