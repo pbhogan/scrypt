@@ -18,7 +18,7 @@ static VALUE sc_calibrate( VALUE self, VALUE maxmem, VALUE maxmemfrac, VALUE max
 	uint32_t r = 0;
 	uint32_t p = 0;
 
-	size_t mm = rb_num2uint( maxmem );
+	size_t mm = NUM2UINT( maxmem );
 	double mf = rb_num2dbl( maxmemfrac );
 	double mt = rb_num2dbl( maxtime );
 
