@@ -1,12 +1,13 @@
 PATH
   remote: .
   specs:
-    scrypt (1.0.0)
+    scrypt (1.0.3)
 
 GEM
   remote: http://rubygems.org/
   specs:
     diff-lcs (1.1.2)
+    rake (0.8.7)
     rspec (2.2.0)
       rspec-core (~> 2.2)
       rspec-expectations (~> 2.2)
@@ -20,5 +21,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  rake
   rspec
   scrypt!
