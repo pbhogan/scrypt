@@ -255,7 +255,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 		goto err2;
 
 	/* 1: (B_0 ... B_{p-1}) <-- PBKDF2(P, S, 1, p * MFLen) */
-	PBKDF2_SHA256(passwd, passwdlen, salt, saltlen, 1, B, p * 128 * r);
+	PBKDF2_scrypt_SHA256(passwd, passwdlen, salt, saltlen, 1, B, p * 128 * r);
 
 	/* 2: for i = 0 to p - 1 do */
 	for (i = 0; i < p; i++) {
@@ -264,7 +264,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 	}
 
 	/* 5: DK <-- PBKDF2(P, B, 1, dkLen) */
-	PBKDF2_SHA256(passwd, passwdlen, B, p * 128 * r, 1, buf, buflen);
+	PBKDF2_scrypt_SHA256(passwd, passwdlen, B, p * 128 * r, 1, buf, buflen);
 
 	/* Free memory. */
 	free(V);
