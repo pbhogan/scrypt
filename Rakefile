@@ -3,7 +3,7 @@ Bundler::GemHelper.install_tasks
 
 require 'rake'
 require 'rake/clean'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'rspec/core/rake_task'
 
 task :default => [:compile, :spec]
