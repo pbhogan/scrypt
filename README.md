@@ -8,7 +8,7 @@ The scrypt key derivation function is designed to be far more secure against har
 
 ## Why you should use scrypt
 
-![KDF comparison](https://github.com/tarcieri/scrypt/raw/master/kdf-comparison.png)
+![KDF comparison](https://github.com/tarcieri/scrypt/raw/modern-readme/kdf-comparison.png)
 
 The designers of scrypt estimate that on modern (2009) hardware, if 5 seconds are spent computing a derived key, the cost of a hardware brute-force attack against scrypt is roughly 4000 times greater than the cost of a similar attack against bcrypt (to find the same password), and 20000 times greater than a similar attack against PBKDF2.
 
@@ -39,6 +39,7 @@ include "scrypt"
 # compare it after retrieval
 @db_password == "my grand secret" #=> true
 @db_password == "a paltry guess"  #=> false
+```
 
 Password.create takes three options which will determine the cost limits of the computation.
 * :max_time specifies the maximum number of seconds the computation should take.
