@@ -41,7 +41,8 @@ include "scrypt"
 @db_password == "a paltry guess"  #=> false
 ```
 
-Password.create takes three options which will determine the cost limits of the computation.
+Password.create takes three options which will determine the cost limits of the computation:
+
 * :max_time specifies the maximum number of seconds the computation should take.
 * :max_mem specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
 * :max_memfrac specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
