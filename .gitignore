@@ -1,7 +1,7 @@
 pkg/*
 doc/*
+tmp/
 *.gem
-.bundle
-ext/mri/*.bundle
+**/*.bundle
 *.o
 .DS_Store

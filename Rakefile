@@ -24,19 +24,17 @@ RSpec::Core::RakeTask.new do |t|
 end
 
 
-desc "Clean native extension build files."
-task :clean do
-  Dir.chdir('ext/mri') do
-    ruby "extconf.rb"
-    sh "make clean"
+if defined? JRUBY_VERSION
+  require 'rake/javaextensiontask'
+  Rake::JavaExtensionTask.new('scrypt_ext') do |ext|
+    ext.ext_dir = 'ext/scrypt'
+  end
+else
+  require 'rake/extensiontask'
+  Rake::ExtensionTask.new('scrypt_ext') do |ext|
+    ext.ext_dir = 'ext/scrypt'
   end
 end
 
 
-desc "Compile the native extension."
-task :compile do
-  Dir.chdir('ext/mri') do
-    ruby "extconf.rb"
-    sh "make"
-  end
-end
+CLEAN.include "**/*.o", "**/*.so", "**/*.bundle", "**/*.jar", "pkg", "tmp"

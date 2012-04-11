@@ -18,10 +18,11 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "rake"
+  s.add_development_dependency "rake-compiler"
 
   s.rubyforge_project = "scrypt"
 
-  s.extensions = ["ext/mri/extconf.rb"]
+  s.extensions = ["ext/scrypt/extconf.rb"] unless defined? JRUBY_VERSION
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
