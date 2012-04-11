@@ -9,7 +9,7 @@ describe "Creating a hashed password" do
     @password.should be_an_instance_of(SCrypt::Password)
   end
 
-  it "should return a valid bcrypt password" do
+  it "should return a valid password" do
     lambda { SCrypt::Password.new(@password) }.should_not raise_error
   end
 
@@ -60,3 +60,4 @@ describe "Comparing a hashed password with a secret" do
     (@password == "@secret").should be(false)
   end
 end
+
