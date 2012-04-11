@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    scrypt (1.0.3)
+    scrypt (1.0.4)
 
 GEM
   remote: http://rubygems.org/
