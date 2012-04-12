@@ -2,6 +2,8 @@ pkg/*
 doc/*
 tmp/
 *.gem
-**/*.bundle
+lib/*.so
+lib/*.bundle
+lib/*.jar
 *.o
 .DS_Store
