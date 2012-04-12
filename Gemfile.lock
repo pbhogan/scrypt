@@ -2,11 +2,15 @@ PATH
   remote: .
   specs:
     scrypt (1.0.3)
+      jruby-openssl
 
 GEM
   remote: http://rubygems.org/
   specs:
+    bouncy-castle-java (1.5.0146.1)
     diff-lcs (1.1.2)
+    jruby-openssl (0.7.6.1)
+      bouncy-castle-java (>= 1.5.0146.1)
     rake (0.8.7)
     rake-compiler (0.8.0)
       rake
@@ -20,6 +24,7 @@ GEM
     rspec-mocks (2.2.0)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES

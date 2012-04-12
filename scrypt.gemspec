@@ -16,6 +16,8 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   EOF
 
+  s.add_runtime_dependency "jruby-openssl" if defined? JRUBY_VERSION
+
   s.add_development_dependency "rspec"
   s.add_development_dependency "rake"
   s.add_development_dependency "rake-compiler"
