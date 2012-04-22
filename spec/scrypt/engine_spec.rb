@@ -7,8 +7,8 @@ describe "The SCrypt engine" do
   end
 end
 
-describe "Generating SCrypt salts" do
 
+describe "Generating SCrypt salts" do
   it "should produce strings" do
     SCrypt::Engine.generate_salt.should be_an_instance_of(String)
   end
@@ -16,16 +16,15 @@ describe "Generating SCrypt salts" do
   it "should produce random data" do
     SCrypt::Engine.generate_salt.should_not equal(SCrypt::Engine.generate_salt)
   end
-
 end
 
-describe "Autodetecting of salt cost" do
 
+describe "Autodetecting of salt cost" do
   it "should work" do
     SCrypt::Engine.autodetect_cost("2a$08$c3$randomjunkgoeshere").should == "2a$08$c3$"
   end
-
 end
+
 
 describe "Generating SCrypt hashes" do
 
@@ -56,3 +55,4 @@ describe "Generating SCrypt hashes" do
     SCrypt::Engine.hash_secret(false, @salt).should == SCrypt::Engine.hash_secret("false", @salt)
   end
 end
+
