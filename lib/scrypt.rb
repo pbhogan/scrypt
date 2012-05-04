@@ -17,6 +17,7 @@ module SCrypt
 
   class Engine
     DEFAULTS = {
+      :key_len => 32,
       :max_mem => 1024 * 1024,
       :max_memfrac => 0.5,
       :max_time => 0.2
@@ -26,12 +27,12 @@ module SCrypt
     private_class_method :__sc_crypt
 
     # Given a secret and a valid salt (see SCrypt::Engine.generate_salt) calculates an scrypt password hash.
-    def self.hash_secret(secret, salt, keylen = 32)
+    def self.hash_secret(secret, salt, key_len = 32)
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
           if salt[-17,1] == "$" #Shorter salt means newer-style hash.
-            salt + "$" + __sc_crypt(secret.to_s, salt, cost, keylen).unpack('H*').first
+            salt + "$" + __sc_crypt(secret.to_s, salt, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           else #Longer salt means legacy-style hash.
             salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
           end
@@ -126,7 +127,8 @@ module SCrypt
 
     class << self
       # Hashes a secret, returning a SCrypt::Password instance.
-      # Takes three options (optional), which will determine the cost limits of the computation.
+      # Takes four options (optional), which will determine the key's length and the cost limits of the computation.
+      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits).
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
       # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
       # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
@@ -139,8 +141,10 @@ module SCrypt
       #
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
+        #Clamp minimum key_len to 20 bytes for sanity and so the RegExp will always detect them.
+        options[:key_len] = 20 if options[:key_len] < 20
         salt = SCrypt::Engine.generate_salt(options)
-        hash = SCrypt::Engine.hash_secret(secret, salt)
+        hash = SCrypt::Engine.hash_secret(secret, salt, options[:key_len])
         Password.new(hash)
       end
     end
@@ -157,7 +161,7 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt))
+      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2))
     end
     alias_method :is_password?, :==
 
