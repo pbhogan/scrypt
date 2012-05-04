@@ -24,8 +24,7 @@
 
 
 static int
-pickparams(size_t maxmem, double maxmemfrac, double maxtime,
-		   int * logN, uint32_t * r, uint32_t * p)
+pickparams(size_t maxmem, double maxmemfrac, double maxtime, int * logN, uint32_t * r, uint32_t * p)
 {
 	size_t memlimit;
 	double opps;
@@ -91,8 +90,7 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime,
 }
 
 int
-calibrate(size_t maxmem, double maxmemfrac, double maxtime,
-		  uint64_t * n, uint32_t * r, uint32_t * p)
+calibrate(size_t maxmem, double maxmemfrac, double maxtime, uint64_t * n, uint32_t * r, uint32_t * p)
 {
 	int logN = 0;
 	int result = pickparams( maxmem, maxmemfrac, maxtime, & logN, r, p );

@@ -38,11 +38,10 @@
 
 #include "scryptenc_cpuperf.h"
 
-#ifndef HAVE_STRUCT_TIMESPEC
-#define HAVE_STRUCT_TIMESPEC 1
+#ifdef __MINGW32__
 struct timespec {
-        long tv_sec;
-        long tv_nsec;
+	long tv_sec;
+	long tv_nsec;
 };
 #endif
 
@@ -124,7 +123,7 @@ getclockdiff(struct timespec * st, double * diffd)
 	if (getclocktime(&en))
 		return (1);
 	*diffd = (en.tv_nsec - st->tv_nsec) * 0.000000001 +
-	    (en.tv_sec - st->tv_sec);
+			(en.tv_sec - st->tv_sec);
 
 	return (0);
 }
@@ -184,7 +183,7 @@ scryptenc_cpuperf(double * opps)
 
 #ifdef DEBUG
 	fprintf(stderr, "%ju salsa20/8 cores performed in %f seconds\n",
-	    (uintmax_t)i, diffd);
+			(uintmax_t)i, diffd);
 #endif
 
 	/* We can do approximately i salsa20/8 cores per diffd seconds. */

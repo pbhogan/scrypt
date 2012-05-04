@@ -80,10 +80,10 @@ be32dec_vect(uint32_t *dst, const unsigned char *src, size_t len)
 /* Adjusted round function for rotating state */
 #define RNDr(S, W, i, k)			\
 	RND(S[(64 - i) % 8], S[(65 - i) % 8],	\
-	    S[(66 - i) % 8], S[(67 - i) % 8],	\
-	    S[(68 - i) % 8], S[(69 - i) % 8],	\
-	    S[(70 - i) % 8], S[(71 - i) % 8],	\
-	    W[i] + k)
+			S[(66 - i) % 8], S[(67 - i) % 8],	\
+			S[(68 - i) % 8], S[(69 - i) % 8],	\
+			S[(70 - i) % 8], S[(71 - i) % 8],	\
+			W[i] + k)
 
 /*
  * scrypt_SHA256 block compression function.  The 256-bit state is transformed via
