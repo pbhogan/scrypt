@@ -26,11 +26,11 @@ module SCrypt
     private_class_method :__sc_crypt
 
     # Given a secret and a valid salt (see SCrypt::Engine.generate_salt) calculates an scrypt password hash.
-    def self.hash_secret(secret, salt)
+    def self.hash_secret(secret, salt, keylen = 32)
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          salt + "$" + __sc_crypt(secret.to_s, salt, cost, 32).unpack('H*').first
+          salt + "$" + __sc_crypt(secret.to_s, salt, cost, keylen).unpack('H*').first
         else
           raise Errors::InvalidSalt.new("invalid salt")
         end
