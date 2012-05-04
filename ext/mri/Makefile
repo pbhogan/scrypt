@@ -53,7 +53,7 @@ vendorarchdir = $(vendorlibdir)/$(sitearch)
 
 NULLCMD = :
 
-CC = /usr/bin/gcc-4.2 -Wall 
+CC = /usr/bin/gcc-4.2 -Wall -msse -msse2 
 CXX = g++-4.2
 LIBRUBY = $(LIBRUBY_SO)
 LIBRUBY_A = lib$(RUBY_SO_NAME)-static.a
@@ -115,8 +115,8 @@ extout_prefix =
 target_prefix = 
 LOCAL_LIBS = 
 LIBS = $(LIBRUBYARG_SHARED)  -lpthread -ldl -lobjc 
-SRCS = crypto_scrypt-ref.c memlimit.c scrypt_calibrate.c scrypt_ext.c scryptenc_cpuperf.c sha256.c
-OBJS = crypto_scrypt-ref.o memlimit.o scrypt_calibrate.o scrypt_ext.o scryptenc_cpuperf.o sha256.o
+SRCS = crypto_scrypt-sse.c memlimit.c scrypt_calibrate.c scrypt_ext.c scryptenc_cpuperf.c sha256.c
+OBJS = crypto_scrypt-sse.o memlimit.o scrypt_calibrate.o scrypt_ext.o scryptenc_cpuperf.o sha256.o
 TARGET = scrypt_ext
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
