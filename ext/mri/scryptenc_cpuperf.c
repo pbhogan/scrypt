@@ -38,6 +38,14 @@
 
 #include "scryptenc_cpuperf.h"
 
+#ifndef HAVE_STRUCT_TIMESPEC
+#define HAVE_STRUCT_TIMESPEC 1
+struct timespec {
+        long tv_sec;
+        long tv_nsec;
+};
+#endif
+
 #ifdef HAVE_CLOCK_GETTIME
 
 static clock_t clocktouse;
