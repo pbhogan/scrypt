@@ -30,7 +30,7 @@ module SCrypt
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 32))
+          salt + "$" + __sc_crypt(secret.to_s, salt, cost, 32).unpack('H*').first
         else
           raise Errors::InvalidSalt.new("invalid salt")
         end
@@ -43,7 +43,7 @@ module SCrypt
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
       cost = calibrate(options)
-      salt = Digest::SHA1.hexdigest(OpenSSL::Random.random_bytes(32))
+      salt = OpenSSL::Random.random_bytes(8).unpack('H*').first
       cost + salt
     end
 
@@ -54,7 +54,7 @@ module SCrypt
 
     # Returns true if +salt+ is a valid salt, false if not.
     def self.valid_salt?(salt)
-      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{20,}$/) != nil
+      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,}$/) != nil
     end
 
     # Returns true if +secret+ is a valid secret, false if not.
@@ -160,7 +160,7 @@ module SCrypt
   private
     # Returns true if +h+ is a valid hash.
     def valid_hash?(h)
-      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{20,}\$[A-Za-z0-9]{20,}$/) != nil
+      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,}\$[A-Za-z0-9]{20,}$/) != nil
     end
 
     # call-seq:
