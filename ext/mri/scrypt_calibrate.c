@@ -32,23 +32,23 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime,
 	double opslimit;
 	double maxN, maxrp;
 	int rc;
-	
+
 	/* Figure out how much memory to use. */
 	if (memtouse(maxmem, maxmemfrac, &memlimit))
 		return (1);
-	
+
 	/* Figure out how fast the CPU is. */
 	if ((rc = scryptenc_cpuperf(&opps)) != 0)
 		return (rc);
 	opslimit = opps * maxtime;
-	
+
 	/* Allow a minimum of 2^15 salsa20/8 cores. */
 	if (opslimit < 32768)
 		opslimit = 32768;
-	
+
 	/* Fix r = 8 for now. */
 	*r = 8;
-	
+
 	/*
 	 * The memory limit requires that 128Nr <= memlimit, while the CPU
 	 * limit requires that 4Nrp <= opslimit.  If opslimit < memlimit/32,
@@ -73,19 +73,19 @@ pickparams(size_t maxmem, double maxmemfrac, double maxtime,
 			if ((uint64_t)(1) << *logN > maxN / 2)
 				break;
 		}
-		
+
 		/* Choose p based on the CPU limit. */
 		maxrp = (opslimit / 4) / ((uint64_t)(1) << *logN);
 		if (maxrp > 0x3fffffff)
 			maxrp = 0x3fffffff;
 		*p = (uint32_t)(maxrp) / *r;
 	}
-	
+
 #ifdef DEBUG
 	fprintf(stderr, "N = %zu r = %d p = %d\n",
 			(size_t)(1) << *logN, (int)(*r), (int)(*p));
 #endif
-	
+
 	/* Success! */
 	return (0);
 }
@@ -99,6 +99,6 @@ calibrate(size_t maxmem, double maxmemfrac, double maxtime,
 	if (result == 0)
 	{
 		*n = (uint64_t)(1) << logN;
-	}	
+	}
 	return result;
 }

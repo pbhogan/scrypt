@@ -26,7 +26,11 @@ static VALUE sc_calibrate( VALUE self, VALUE maxmem, VALUE maxmemfrac, VALUE max
 	{
 		char cost_str[33];
 		memset( cost_str, '\0', 33 );
+		#ifdef __MINGW32__
+		sprintf( cost_str, "%lx$%x$%x$", (long unsigned int)n, (unsigned int)r, (unsigned int)p );
+		#else
 		sprintf( cost_str, "%Lx$%x$%x$", n, r, p );
+		#endif
 		return rb_str_new2( cost_str );
 	}
 
@@ -36,6 +40,11 @@ static VALUE sc_calibrate( VALUE self, VALUE maxmem, VALUE maxmemfrac, VALUE max
 
 static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost )
 {
+	uint64_t n = 0;
+	uint32_t r = 0;
+	uint32_t p = 0;
+	int result;
+
 	const char * safe_key = RSTRING_PTR(key) ? RSTRING_PTR(key) : "";
 	const char * safe_salt = RSTRING_PTR(salt) ? RSTRING_PTR(salt) : "";
 
@@ -48,12 +57,13 @@ static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost )
 		return Qnil;
 	}
 
-	uint64_t n = 0;
-	uint32_t r = 0;
-	uint32_t p = 0;
+	#ifdef __MINGW32__
+	sscanf( RSTRING_PTR( cost ), "%lx$%x$%x$", (long unsigned int*)& n, (unsigned int*)& r, (unsigned int*)& p );
+	#else
 	sscanf( RSTRING_PTR( cost ), "%Lx$%x$%x$", & n, & r, & p );
+	#endif
 
-	int result = crypto_scrypt(
+	result = crypto_scrypt(
 		(uint8_t *) safe_key, strlen(safe_key),
 		(uint8_t *) safe_salt, strlen(safe_salt),
 		n, r, p,
