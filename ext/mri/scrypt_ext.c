@@ -38,7 +38,7 @@ static VALUE sc_calibrate( VALUE self, VALUE maxmem, VALUE maxmemfrac, VALUE max
 }
 
 
-static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost )
+static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost, VALUE keylen )
 {
 	uint64_t n = 0;
 	uint32_t r = 0;
@@ -48,7 +48,7 @@ static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost )
 	const char * safe_key = RSTRING_PTR(key) ? RSTRING_PTR(key) : "";
 	const char * safe_salt = RSTRING_PTR(salt) ? RSTRING_PTR(salt) : "";
 
-	const size_t buffer_size = 256;
+	const size_t buffer_size = NUM2UINT( keylen );
 	char buffer[buffer_size];
 	memset( buffer, '\0', buffer_size );
 
@@ -87,7 +87,7 @@ void Init_scrypt_ext()
 	cSCryptEngine = rb_define_class_under( mSCrypt, "Engine", rb_cObject );
 
 	rb_define_singleton_method( cSCryptEngine, "__sc_calibrate", sc_calibrate, 3 );
-	rb_define_singleton_method( cSCryptEngine, "__sc_crypt", sc_crypt, 3 );
+	rb_define_singleton_method( cSCryptEngine, "__sc_crypt", sc_crypt, 4 );
 }
 
 

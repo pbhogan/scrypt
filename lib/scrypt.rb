@@ -8,7 +8,7 @@ require "scanf"
 
 
 module SCrypt
-  
+
   module Errors
     class InvalidSalt   < StandardError; end  # The salt parameter provided is invalid.
     class InvalidHash   < StandardError; end  # The hash parameter provided is invalid.
@@ -16,7 +16,7 @@ module SCrypt
   end
 
   class Engine
-    DEFAULTS = { 
+    DEFAULTS = {
       :max_mem => 1024 * 1024,
       :max_memfrac => 0.5,
       :max_time => 0.2
@@ -30,7 +30,7 @@ module SCrypt
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost))
+          salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 32))
         else
           raise Errors::InvalidSalt.new("invalid salt")
         end
@@ -78,7 +78,7 @@ module SCrypt
       options = DEFAULTS.merge(options)
       __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
     end
-    
+
     # Computes the memory use of the given +cost+
     def self.memory_use(cost)
       n, r, p = cost.scanf("%x$%x$%x$")
@@ -121,7 +121,7 @@ module SCrypt
     attr_reader :cost
 
     class << self
-      # Hashes a secret, returning a SCrypt::Password instance. 
+      # Hashes a secret, returning a SCrypt::Password instance.
       # Takes three options (optional), which will determine the cost limits of the computation.
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
       # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
