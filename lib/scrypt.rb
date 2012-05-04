@@ -26,14 +26,21 @@ module SCrypt
     private_class_method :__sc_calibrate
     private_class_method :__sc_crypt
 
+    def self.scrypt_raw(secret, salt, n, r, p, key_len)
+      cost = "%x$%x$%x$" % [n, r, p]
+      __sc_crypt(secret, salt, cost, key_len)
+    end
+
     # Given a secret and a valid salt (see SCrypt::Engine.generate_salt) calculates an scrypt password hash.
-    def self.hash_secret(secret, salt, key_len = 32)
+    def self.hash_secret(secret, salt, key_len = DEFAULTS[:key_len])
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          if salt[-17,1] == "$" #Shorter salt means newer-style hash.
-            salt + "$" + __sc_crypt(secret.to_s, salt, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
-          else #Longer salt means legacy-style hash.
+          #16-byte salt means newer-style hash. Longer means legacy-style hash. Shorter won't pass regexp.
+          if (salt_only = salt[/\$([A-Za-z0-9]{16})$/, 1])
+            #Don't send cost parameter as part of salt (it doesn't add any entropy).
+            salt + "$" + __sc_crypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
+          else
             salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
           end
         else
