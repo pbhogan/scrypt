@@ -59,5 +59,17 @@ describe "Comparing a hashed password with a secret" do
   it "should compare unsuccessfully to anything besides original secret" do
     (@password == "@secret").should be(false)
   end
+
+end
+
+describe "Legacy-style hashes" do
+  before :each do
+    @secret = "my secret"
+    @hash = "400$8$d$173a8189751c095a29b933789560b73bf17b2e01$9bf66d74bd6f3ebcf99da3b379b689b89db1cb07"
+  end
+
+  it "should compare successfully" do
+    (SCrypt::Password.new(@hash) == @secret).should be(true)
+  end
 end
 

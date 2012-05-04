@@ -30,7 +30,11 @@ module SCrypt
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          salt + "$" + __sc_crypt(secret.to_s, salt, cost, keylen).unpack('H*').first
+          if salt[-17,1] == "$" #Shorter salt means newer-style hash.
+            salt + "$" + __sc_crypt(secret.to_s, salt, cost, keylen).unpack('H*').first
+          else #Longer salt means legacy-style hash.
+            salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
+          end
         else
           raise Errors::InvalidSalt.new("invalid salt")
         end
@@ -43,7 +47,7 @@ module SCrypt
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
       cost = calibrate(options)
-      salt = OpenSSL::Random.random_bytes(8).unpack('H*').first
+      salt = OpenSSL::Random.random_bytes(8).unpack('H*').first.rjust(16,'0')
       cost + salt
     end
 
