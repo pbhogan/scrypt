@@ -18,6 +18,7 @@ module SCrypt
   class Engine
     DEFAULTS = {
       :key_len => 32,
+      :salt_size => 8,
       :max_mem => 1024 * 1024,
       :max_memfrac => 0.5,
       :max_time => 0.2
@@ -36,13 +37,12 @@ module SCrypt
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          #16-byte salt means newer-style hash. Longer means legacy-style hash. Shorter won't pass regexp.
-          if (salt_only = salt[/\$([A-Za-z0-9]{16})$/, 1])
-            #Don't send cost parameter as part of salt (it doesn't add any entropy).
+          salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
+          if salt_only.length == 40 #Old-style hash with 40-character salt
+            salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
+          else #New-style hash
             salt_only = [salt_only].pack('H*')
             salt + "$" + __sc_crypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
-          else
-            salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
           end
         else
           raise Errors::InvalidSalt.new("invalid salt")
@@ -56,7 +56,11 @@ module SCrypt
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
       cost = calibrate(options)
-      salt = OpenSSL::Random.random_bytes(8).unpack('H*').first.rjust(16,'0')
+      salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16,'0')
+      if salt.length == 40
+        #If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
+        salt = '0' + salt
+      end
       cost + salt
     end
 
@@ -135,8 +139,9 @@ module SCrypt
 
     class << self
       # Hashes a secret, returning a SCrypt::Password instance.
-      # Takes four options (optional), which will determine the key's length and the cost limits of the computation.
-      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits).
+      # Takes four options (optional), which will determine the salt/key's length and the cost limits of the computation.
+      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum us 512 bytes (4096 bits).
+      # <tt>:salt_size</tt> specifies the size in bytes of the salt you want to generate. The default/minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
       # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
       # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
@@ -149,8 +154,12 @@ module SCrypt
       #
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
-        #Clamp minimum key_len to 20 bytes for sanity and so the RegExp will always detect them.
-        options[:key_len] = 20 if options[:key_len] < 20
+        #Clamp minimum/maximum keylen
+        options[:key_len] = 16 if options[:key_len] < 16
+        options[:key_len] = 512 if options[:key_len] > 512
+        #Clamp minimum/maximum salt_size
+        options[:salt_size] = 8 if options[:salt_size] < 8
+        options[:salt_size] = 32 if options[:salt_size] > 32
         salt = SCrypt::Engine.generate_salt(options)
         hash = SCrypt::Engine.hash_secret(secret, salt, options[:key_len])
         Password.new(hash)
@@ -176,7 +185,7 @@ module SCrypt
   private
     # Returns true if +h+ is a valid hash.
     def valid_hash?(h)
-      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,}\$[A-Za-z0-9]{20,}$/) != nil
+      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}\$[A-Za-z0-9]{32,1024}$/) != nil
     end
 
     # call-seq:

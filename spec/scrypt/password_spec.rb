@@ -45,7 +45,6 @@ describe "Reading a hashed password" do
   end
 end
 
-
 describe "Comparing a hashed password with a secret" do
   before :each do
     @secret = "s3cr3t"
@@ -58,6 +57,65 @@ describe "Comparing a hashed password with a secret" do
 
   it "should compare unsuccessfully to anything besides original secret" do
     (@password == "@secret").should be(false)
+  end
+
+end
+
+describe "non-default salt sizes" do
+  before :each do
+    @secret = "s3cret"
+  end
+
+  it "should enforce a minimum salt of 8 bytes" do
+    @password = SCrypt::Password.create(@secret, :salt_size => 7)
+    @password.salt.length.should eq(8 * 2)
+  end
+
+  it "should allow a salt of 32 bytes" do
+    @password = SCrypt::Password.create(@secret, :salt_size => 32)
+    @password.salt.length.should eq(32 * 2)
+  end
+
+  it "should enforce a maximum salt of 32 bytes" do
+    @password = SCrypt::Password.create(@secret, :salt_size => 33)
+    @password.salt.length.should eq(32 * 2)
+  end
+
+  it "should pad a 20-byte salt to not look like a 20-byte SHA1" do
+    @password = SCrypt::Password.create(@secret, :salt_size => 20)
+    @password.salt.length.should eq(41)
+  end
+
+  it "should properly compare a non-standard salt hash" do
+    @password = SCrypt::Password.create(@secret, :salt_size => 20)
+    (SCrypt::Password.new(@password.to_s) == @secret).should be(true)
+  end
+
+end
+
+describe "non-default key lengths" do
+  before :each do
+    @secret = "s3cret"
+  end
+
+  it "should enforce a minimum keylength of 16 bytes" do
+    @password = SCrypt::Password.create(@secret, :key_len => 15)
+    @password.hash.length.should eq(16 * 2)
+  end
+
+  it "should allow a keylength of 512 bytes" do
+    @password = SCrypt::Password.create(@secret, :key_len => 512)
+    @password.hash.length.should eq(512 * 2)
+  end
+
+  it "should enforce a maximum keylength of 512 bytes" do
+    @password = SCrypt::Password.create(@secret, :key_len => 513)
+    @password.hash.length.should eq(512 * 2)
+  end
+
+  it "should properly compare a non-standard hash" do
+    @password = SCrypt::Password.create(@secret, :key_len => 512)
+    (SCrypt::Password.new(@password.to_s) == @secret).should be(true)
   end
 
 end
