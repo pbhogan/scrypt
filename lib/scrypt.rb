@@ -39,6 +39,7 @@ module SCrypt
           #16-byte salt means newer-style hash. Longer means legacy-style hash. Shorter won't pass regexp.
           if (salt_only = salt[/\$([A-Za-z0-9]{16})$/, 1])
             #Don't send cost parameter as part of salt (it doesn't add any entropy).
+            salt_only = [salt_only].pack('H*')
             salt + "$" + __sc_crypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           else
             salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
