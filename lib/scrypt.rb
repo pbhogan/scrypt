@@ -48,10 +48,10 @@ module SCrypt
           cost = autodetect_cost(salt)
           salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
           if salt_only.length == 40 #Old-style hash with 40-character salt
-            salt + "$" + Digest::SHA1.hexdigest(self.scrypt(secret.to_s, salt, cost, 256))
+            salt + "$" + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
           else #New-style hash
             salt_only = [salt_only].pack('H*')
-            salt + "$" + self.scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
+            salt + "$" + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           end
         else
           raise Errors::InvalidSalt.new("invalid salt")
@@ -80,7 +80,7 @@ module SCrypt
 
     # Returns true if +salt+ is a valid salt, false if not.
     def self.valid_salt?(salt)
-      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,}$/) != nil
+      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}$/) != nil
     end
 
     # Returns true if +secret+ is a valid secret, false if not.
