@@ -8,7 +8,7 @@ require "scanf"
 
 
 module SCrypt
-  
+
   module Errors
     class InvalidSalt   < StandardError; end  # The salt parameter provided is invalid.
     class InvalidHash   < StandardError; end  # The hash parameter provided is invalid.
@@ -16,7 +16,9 @@ module SCrypt
   end
 
   class Engine
-    DEFAULTS = { 
+    DEFAULTS = {
+      :key_len => 32,
+      :salt_size => 8,
       :max_mem => 1024 * 1024,
       :max_memfrac => 0.5,
       :max_time => 0.2
@@ -25,12 +27,32 @@ module SCrypt
     private_class_method :__sc_calibrate
     private_class_method :__sc_crypt
 
+    def self.scrypt(secret, salt, *args, key_len)
+      if args.length == 1
+        #args is a cost-string
+        n, r, p = args[0].split('$').map{ |x| x.to_i(16) }
+        __sc_crypt(secret, salt, n, r, p, key_len)
+      elsif args.length == 3
+        #args is n, r, p
+        n, r, p = args[0, 3]
+        __sc_crypt(secret, salt, n, r, p, key_len)
+      else
+        raise ArgumentError.new("invalid number of arguments (4 or 6)")
+      end
+    end
+
     # Given a secret and a valid salt (see SCrypt::Engine.generate_salt) calculates an scrypt password hash.
-    def self.hash_secret(secret, salt)
+    def self.hash_secret(secret, salt, key_len = DEFAULTS[:key_len])
       if valid_secret?(secret)
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
-          salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost))
+          salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
+          if salt_only.length == 40 #Old-style hash with 40-character salt
+            salt + "$" + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
+          else #New-style hash
+            salt_only = [salt_only].pack('H*')
+            salt + "$" + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
+          end
         else
           raise Errors::InvalidSalt.new("invalid salt")
         end
@@ -43,7 +65,11 @@ module SCrypt
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
       cost = calibrate(options)
-      salt = Digest::SHA1.hexdigest(OpenSSL::Random.random_bytes(32))
+      salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16,'0')
+      if salt.length == 40
+        #If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
+        salt = '0' + salt
+      end
       cost + salt
     end
 
@@ -54,7 +80,7 @@ module SCrypt
 
     # Returns true if +salt+ is a valid salt, false if not.
     def self.valid_salt?(salt)
-      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{20,}$/) != nil
+      salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}$/) != nil
     end
 
     # Returns true if +secret+ is a valid secret, false if not.
@@ -76,9 +102,9 @@ module SCrypt
     #
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
-      __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
+      "%x$%x$%x$" % __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
     end
-    
+
     # Computes the memory use of the given +cost+
     def self.memory_use(cost)
       n, r, p = cost.scanf("%x$%x$%x$")
@@ -121,8 +147,10 @@ module SCrypt
     attr_reader :cost
 
     class << self
-      # Hashes a secret, returning a SCrypt::Password instance. 
-      # Takes three options (optional), which will determine the cost limits of the computation.
+      # Hashes a secret, returning a SCrypt::Password instance.
+      # Takes four options (optional), which will determine the salt/key's length and the cost limits of the computation.
+      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum us 512 bytes (4096 bits).
+      # <tt>:salt_size</tt> specifies the size in bytes of the salt you want to generate. The default/minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
       # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
       # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
@@ -135,8 +163,14 @@ module SCrypt
       #
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
+        #Clamp minimum/maximum keylen
+        options[:key_len] = 16 if options[:key_len] < 16
+        options[:key_len] = 512 if options[:key_len] > 512
+        #Clamp minimum/maximum salt_size
+        options[:salt_size] = 8 if options[:salt_size] < 8
+        options[:salt_size] = 32 if options[:salt_size] > 32
         salt = SCrypt::Engine.generate_salt(options)
-        hash = SCrypt::Engine.hash_secret(secret, salt)
+        hash = SCrypt::Engine.hash_secret(secret, salt, options[:key_len])
         Password.new(hash)
       end
     end
@@ -153,14 +187,14 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt))
+      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2))
     end
     alias_method :is_password?, :==
 
   private
     # Returns true if +h+ is a valid hash.
     def valid_hash?(h)
-      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{20,}\$[A-Za-z0-9]{20,}$/) != nil
+      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}\$[A-Za-z0-9]{32,1024}$/) != nil
     end
 
     # call-seq:
