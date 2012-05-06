@@ -24,25 +24,15 @@ static VALUE sc_calibrate( VALUE self, VALUE maxmem, VALUE maxmemfrac, VALUE max
 
 	if (calibrate( mm, mf, mt, & n, & r, & p ) == 0)
 	{
-		char cost_str[33];
-		memset( cost_str, '\0', 33 );
-		#ifdef __MINGW32__
-		sprintf( cost_str, "%lx$%x$%x$", (long unsigned int)n, (unsigned int)r, (unsigned int)p );
-		#else
-		sprintf( cost_str, "%Lx$%x$%x$", n, r, p );
-		#endif
-		return rb_str_new2( cost_str );
+		return rb_ary_new3( 3, UINT2NUM( n ), UINT2NUM( r ), UINT2NUM( p ));
 	}
 
 	return Qnil;
 }
 
 
-static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost, VALUE keylen )
+static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE n, VALUE r, VALUE p, VALUE keylen )
 {
-	uint64_t n = 0;
-	uint32_t r = 0;
-	uint32_t p = 0;
 	int result;
 
 	const char * safe_key = RSTRING_PTR(key) ? RSTRING_PTR(key) : "";
@@ -52,21 +42,10 @@ static VALUE sc_crypt( VALUE self, VALUE key, VALUE salt, VALUE cost, VALUE keyl
 	char buffer[buffer_size];
 	memset( buffer, '\0', buffer_size );
 
-	if (!RSTRING_PTR( cost ))
-	{
-		return Qnil;
-	}
-
-	#ifdef __MINGW32__
-	sscanf( RSTRING_PTR( cost ), "%lx$%x$%x$", (long unsigned int*)& n, (unsigned int*)& r, (unsigned int*)& p );
-	#else
-	sscanf( RSTRING_PTR( cost ), "%Lx$%x$%x$", & n, & r, & p );
-	#endif
-
 	result = crypto_scrypt(
 		(uint8_t *) safe_key, strlen(safe_key),
 		(uint8_t *) safe_salt, strlen(safe_salt),
-		n, r, p,
+		NUM2UINT( n ), NUM2UINT( r ), NUM2UINT( p ),
 		(uint8_t *) buffer, buffer_size
 	);
 
@@ -87,50 +66,5 @@ void Init_scrypt_ext()
 	cSCryptEngine = rb_define_class_under( mSCrypt, "Engine", rb_cObject );
 
 	rb_define_singleton_method( cSCryptEngine, "__sc_calibrate", sc_calibrate, 3 );
-	rb_define_singleton_method( cSCryptEngine, "__sc_crypt", sc_crypt, 4 );
+	rb_define_singleton_method( cSCryptEngine, "__sc_crypt", sc_crypt, 6 );
 }
-
-
-/*
-#include <stdio.h>
-#include <string.h>
-#include "scrypt_calibrate.h"
-#include "crypto_scrypt.h"
-
-int main (int argc, const char * argv[])
-{
-	uint64_t n;
-	uint32_t r;
-	uint32_t p;
-
-	int result = calibrate( 0, 0.001, 0.25, & n, & r, & p );
-
-	printf( "%Ld %d %d \n", n, r, p );
-
-	char header[33];
-	sprintf( header, "%.16Lx%.8x%.8x", n, r, p );
-	printf( "%s \n", header );
-
-	uint64_t a = 0;
-	uint32_t b = 0;
-	uint32_t c = 0;
-	sscanf( header, "%16Lx%8x%8x", & a, & b, & c );
-	printf( "%Ld %d %d \n", a, b, c );
-
-	char password[] = "helloworld!";
-	char salt[] = "qwerty";
-	const size_t buffer_size = 32;
-	char buffer[buffer_size];
-	memset(buffer, '\0', buffer_size);
-
-	result = crypto_scrypt( (uint8_t *) password, strlen(password), (uint8_t *) salt, strlen(salt), n, r, p, (uint8_t *) buffer, buffer_size );
-
-	for (size_t i=0; i<buffer_size; i++)
-	{
-		printf( "%.2x", buffer[i] );
-	}
-	printf( "\n" );
-
-    return 0;
-}
-*/

@@ -27,9 +27,18 @@ module SCrypt
     private_class_method :__sc_calibrate
     private_class_method :__sc_crypt
 
-    def self.scrypt_raw(secret, salt, n, r, p, key_len)
-      cost = "%x$%x$%x$" % [n, r, p]
-      __sc_crypt(secret, salt, cost, key_len)
+    def self.scrypt(secret, salt, *args, key_len)
+      if args.length == 1
+        #args is a cost-string
+        n, r, p = args[0].split('$').map{ |x| x.to_i(16) }
+        __sc_crypt(secret, salt, n, r, p, key_len)
+      elsif args.length == 3
+        #args is n, r, p
+        n, r, p = args[0, 3]
+        __sc_crypt(secret, salt, n, r, p, key_len)
+      else
+        raise ArgumentError.new("invalid number of arguments (4 or 6)")
+      end
     end
 
     # Given a secret and a valid salt (see SCrypt::Engine.generate_salt) calculates an scrypt password hash.
@@ -39,10 +48,10 @@ module SCrypt
           cost = autodetect_cost(salt)
           salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
           if salt_only.length == 40 #Old-style hash with 40-character salt
-            salt + "$" + Digest::SHA1.hexdigest(__sc_crypt(secret.to_s, salt, cost, 256))
+            salt + "$" + Digest::SHA1.hexdigest(self.scrypt(secret.to_s, salt, cost, 256))
           else #New-style hash
             salt_only = [salt_only].pack('H*')
-            salt + "$" + __sc_crypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
+            salt + "$" + self.scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           end
         else
           raise Errors::InvalidSalt.new("invalid salt")
@@ -93,7 +102,7 @@ module SCrypt
     #
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
-      __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
+      "%x$%x$%x$" % __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
     end
 
     # Computes the memory use of the given +cost+
