@@ -3,7 +3,6 @@
 $LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "ext", "mri")))
 require "scrypt_ext"
 require "openssl"
-require "digest/sha1"
 require "scanf"
 
 
