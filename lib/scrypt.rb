@@ -3,7 +3,6 @@
 $LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "ext", "mri")))
 require "scrypt_ext"
 require "openssl"
-require "digest/sha1"
 require "scanf"
 
 
@@ -49,12 +48,12 @@ module SCrypt
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
           salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
-          if salt_only.length == 40 
+          if salt_only.length == 40
             # Old-style hash with 40-character salt
             salt + "$" + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
-          else 
+          else
             # New-style hash
-            salt_only = [salt_only].pack('H*')
+            salt_only = [salt_only.sub(/^(00)+/, '')].pack('H*')
             salt + "$" + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           end
         else
@@ -152,9 +151,9 @@ module SCrypt
 
     class << self
       # Hashes a secret, returning a SCrypt::Password instance.
-      # Takes four options (optional), which will determine the salt/key's length and the cost limits of the computation.
-      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum us 512 bytes (4096 bits).
-      # <tt>:salt_size</tt> specifies the size in bytes of the salt you want to generate. The default/minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
+      # Takes five options (optional), which will determine the salt/key's length and the cost limits of the computation.
+      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum is 512 bytes (4096 bits).
+      # <tt>:salt_size</tt> specifies the size in bytes of the random salt you want to generate. The default and minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
       # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
       # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
