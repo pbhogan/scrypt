@@ -17,24 +17,26 @@ module SCrypt
 
   class Engine
     DEFAULTS = {
-      :key_len => 32,
-      :salt_size => 8,
-      :max_mem => 1024 * 1024,
+      :key_len     => 32,
+      :salt_size   => 8,
+      :max_mem     => 1024 * 1024,
       :max_memfrac => 0.5,
-      :max_time => 0.2
+      :max_time    => 0.2
     }
 
     private_class_method :__sc_calibrate
     private_class_method :__sc_crypt
 
-    def self.scrypt(secret, salt, *args, key_len)
-      if args.length == 1
-        #args is a cost-string
+    def self.scrypt(secret, salt, *args)
+      if args.length == 2
+        # args is [cost_string, key_len]
         n, r, p = args[0].split('$').map{ |x| x.to_i(16) }
+        key_len = args[1]
         __sc_crypt(secret, salt, n, r, p, key_len)
-      elsif args.length == 3
-        #args is n, r, p
+      elsif args.length == 4
+        # args is [n, r, p, key_len]
         n, r, p = args[0, 3]
+        key_len = args[3]
         __sc_crypt(secret, salt, n, r, p, key_len)
       else
         raise ArgumentError.new("invalid number of arguments (4 or 6)")
@@ -47,9 +49,11 @@ module SCrypt
         if valid_salt?(salt)
           cost = autodetect_cost(salt)
           salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
-          if salt_only.length == 40 #Old-style hash with 40-character salt
+          if salt_only.length == 40 
+            # Old-style hash with 40-character salt
             salt + "$" + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
-          else #New-style hash
+          else 
+            # New-style hash
             salt_only = [salt_only].pack('H*')
             salt + "$" + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           end

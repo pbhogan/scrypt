@@ -1,4 +1,4 @@
-scrypt
+scrypt [![Build Status](https://secure.travis-ci.org/pbhogan/scrypt.png)](http://travis-ci.org/pbhogan/scrypt)
 ======
 
 The scrypt key derivation function is designed to be far more secure against hardware brute-force attacks than alternative functions such as PBKDF2 or bcrypt.

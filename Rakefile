@@ -14,7 +14,7 @@ rd = Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'doc/rdoc'
   rdoc.options << '--title' << 'scrypt-ruby' << '--line-numbers' << '--inline-source' << '--main' << 'README'
   rdoc.template = ENV['TEMPLATE'] if ENV['TEMPLATE']
-  rdoc.rdoc_files.include('README', 'COPYING', 'CHANGELOG', 'lib/**/*.rb')
+  rdoc.rdoc_files.include('COPYING', 'lib/**/*.rb')
 end
 
 

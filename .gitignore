@@ -5,3 +5,5 @@ doc/*
 ext/mri/*.bundle
 *.o
 .DS_Store
+
+ext/mri/Makefile
