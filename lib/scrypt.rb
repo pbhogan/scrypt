@@ -53,7 +53,7 @@ module SCrypt
             salt + "$" + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
           else
             # New-style hash
-            salt_only = [salt_only].pack('H*')
+            salt_only = [salt_only.sub(/^(00)+/, '')].pack('H*')
             salt + "$" + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
           end
         else
