@@ -23,22 +23,15 @@ gem install scrypt
 It works pretty similarly to ruby-bcrypt with a few minor differences, especially where the cost factor is concerned.
 
 ```ruby
-include "scrypt"
+require "scrypt"
 
 # hash a user's password
-@password = Password.create("my grand secret")
-@password #=> "2000$8$1$f5f2fa5fe5484a7091f1299768fbe92b5a7fbc77$6a385f22c54d92c314b71a4fd5ef33967c93d679"
+@password = SCrypt::Password.create("my grand secret")
+# => "400$8$36$78f4ae6983f76119$37ec6ce55a2b928dc56ff9a7d0cdafbd7dbde49d9282c38a40b1434e88f24cf5"
 
-# store it safely
-@user.update_attribute(:password, @password)
-
-# read it back
-@user.reload!
-@db_password = Password.new(@user.password)
-
-# compare it after retrieval
-@db_password == "my grand secret" #=> true
-@db_password == "a paltry guess"  #=> false
+# compare to strings
+@password == "my grand secret" # => true
+@password == "a paltry guess"  # => false
 ```
 
 Password.create takes five options which will determine the key length and salt size, as well as the cost limits of the computation:
@@ -50,3 +43,30 @@ Password.create takes five options which will determine the key length and salt 
 * `:max_memfrac` specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
 
 Default options will result in calculation time of approx. 200 ms with 1 MB memory use.
+
+## Other things you can do
+
+```ruby
+require "scrypt"
+
+SCrypt::Engine.calibrate
+# => "400$8$25$"
+
+salt = SCrypt::Engine.generate_salt
+# => "400$8$26$b62e0f787a5fc373"
+
+SCrypt::Engine.hash_secret "my grand secret", salt
+# => "400$8$26$b62e0f787a5fc373$0399ccd4fa26642d92741b17c366b7f6bd12ccea5214987af445d2bed97bc6a2"
+```
+
+## Usage in Rails (and the like)
+
+```ruby
+# store it safely in the user model
+@user.update_attribute(:password, @password)
+
+# read it back later
+@user.reload!
+@password = SCrypt::Password.new(@user.password)
+@password == "my grand secret" # => true
+```
