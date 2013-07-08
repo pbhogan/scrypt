@@ -6,6 +6,16 @@ require 'rake/clean'
 require 'rdoc/task'
 require 'rspec/core/rake_task'
 
+require 'rubygems'
+require 'rubygems/package_task'
+require 'ffi-compiler/export_task'
+
+
+def gem_spec
+  @gem_spec ||= Gem::Specification.load('scrypt.gemspec')
+end
+
+
 task :default => [:compile, :spec]
 
 
@@ -26,17 +36,25 @@ end
 
 desc "Clean native extension build files."
 task :clean do
-  Dir.chdir('ext/mri') do
-    ruby "extconf.rb"
-    sh "make clean"
-  end
 end
 
 
 desc "Compile the native extension."
 task :compile do
-  Dir.chdir('ext/mri') do
-    ruby "extconf.rb"
-    sh "make"
+  Dir.chdir('ext/scrypt') do
+    ruby "rake"
   end
 end
+
+
+FFI::Compiler::ExportTask.new('lib/scrypt', 'ext', :gem_spec => gem_spec) do |t|
+  t.export 'scrypt_ext.rb'
+end
+
+
+Gem::PackageTask.new(gem_spec) do |pkg|
+  pkg.need_zip = true
+  pkg.need_tar = true
+  pkg.package_dir = 'pkg'
+end
+

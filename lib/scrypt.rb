@@ -1,9 +1,9 @@
 # A wrapper for the scrypt algorithm.
 
-$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "ext", "mri")))
-require "scrypt_ext"
+require "scrypt/scrypt_ext"
 require "openssl"
 require "scanf"
+require "ffi"
 
 
 module SCrypt
@@ -22,9 +22,6 @@ module SCrypt
       :max_memfrac => 0.5,
       :max_time    => 0.2
     }
-
-    private_class_method :__sc_calibrate
-    private_class_method :__sc_crypt
 
     def self.scrypt(secret, salt, *args)
       if args.length == 2
@@ -117,6 +114,56 @@ module SCrypt
     # Autodetects the cost from the salt string.
     def self.autodetect_cost(salt)
       salt[/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$/]
+    end
+
+    private
+
+    class Calibration < FFI::Struct
+      layout  :n, :uint64,
+              :r, :uint32,
+              :p, :uint32,
+              :size, :uint64
+    end
+
+    def self.__sc_calibrate(max_mem, max_memfrac, max_time)
+      result = nil
+
+      FFI::MemoryPointer.new :uint8, Calibration.size, false do |pointer|
+        calibration = Calibration.new pointer
+        calibration[:size] = max_mem
+        retval = SCrypt::Ext.sc_calibrate(max_memfrac, max_time, calibration)
+
+        if retval == 0
+          result = [calibration[:n], calibration[:r], calibration[:p]]
+        else
+          raise "calibration error #{result}"
+        end
+      end
+
+      result
+    end
+
+    def self.__sc_crypt(secret, salt, n, r, p, key_len)
+      result = nil
+
+      FFI::MemoryPointer.new :uint8, Calibration.size, false do |pointer|
+        calibration = Calibration.new pointer
+        calibration[:n] = n
+        calibration[:r] = r
+        calibration[:p] = p
+        calibration[:size] = key_len
+
+        FFI::MemoryPointer.new(:uint8, key_len, false) do |buffer|
+          retval = SCrypt::Ext.sc_crypt(secret, salt, buffer, calibration)
+          if retval == 0
+            result = buffer.get_string(0, key_len)
+          else
+            raise "scrypt error #{retval}"
+          end
+        end
+      end
+
+      result
     end
   end
 

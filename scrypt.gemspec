@@ -5,7 +5,6 @@ require "scrypt/version"
 Gem::Specification.new do |s|
   s.name        = "scrypt"
   s.version     = SCrypt::VERSION
-  s.platform    = Gem::Platform::RUBY
   s.authors     = ["Patrick Hogan"]
   s.email       = ["pbhogan@gmail.com"]
   s.homepage    = ""
@@ -16,17 +15,18 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   EOF
 
+  s.add_dependency 'ffi-compiler', '>= 0.0.2'
+  s.add_dependency 'rake'
   s.add_development_dependency "rspec"
   s.add_development_dependency "rdoc"
-  s.add_development_dependency "rake", "~> 0.9.2"
   s.add_development_dependency "awesome_print"
 
   s.rubyforge_project = "scrypt"
 
-  s.extensions = ["ext/mri/extconf.rb"]
+  s.extensions = ["ext/scrypt/Rakefile"]
 
-  s.files         = `git ls-files`.split("\n")
-  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.files = %w(Rakefile scrypt.gemspec README.md COPYING) + Dir.glob("{lib,spec,autotest}/**/*")
+  s.files += Dir.glob("ext/scrypt/*")
+  s.test_files = Dir.glob("spec/**/*")
   s.require_paths = ["lib"]
 end
