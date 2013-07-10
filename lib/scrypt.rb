@@ -1,12 +1,18 @@
 # A wrapper for the scrypt algorithm.
 
-$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "ext", "mri")))
-require "scrypt_ext"
+require "scrypt/scrypt_ext"
 require "openssl"
 require "scanf"
+require "ffi"
 
 
 module SCrypt
+
+  module Ext
+    # Bind the external functions
+    attach_function :sc_calibrate, [:size_t, :double, :double, :pointer], :int, :blocking => true
+    attach_function :crypto_scrypt, [:pointer, :size_t, :pointer, :size_t, :uint64, :uint32, :uint32, :pointer, :size_t], :int, :blocking => true # todo
+  end
 
   module Errors
     class InvalidSalt   < StandardError; end  # The salt parameter provided is invalid.
@@ -22,9 +28,6 @@ module SCrypt
       :max_memfrac => 0.5,
       :max_time    => 0.2
     }
-
-    private_class_method :__sc_calibrate
-    private_class_method :__sc_crypt
 
     def self.scrypt(secret, salt, *args)
       if args.length == 2
@@ -117,6 +120,48 @@ module SCrypt
     # Autodetects the cost from the salt string.
     def self.autodetect_cost(salt)
       salt[/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$/]
+    end
+
+    private
+
+    class Calibration < FFI::Struct
+      layout  :n, :uint64,
+              :r, :uint32,
+              :p, :uint32
+    end
+
+    def self.__sc_calibrate(max_mem, max_memfrac, max_time)
+      result = nil
+
+      calibration = Calibration.new
+      retval = SCrypt::Ext.sc_calibrate(max_mem, max_memfrac, max_time, calibration)
+
+      if retval == 0
+        result = [calibration[:n], calibration[:r], calibration[:p]]
+      else
+        raise "calibration error #{result}"
+      end
+
+      result
+    end
+
+    def self.__sc_crypt(secret, salt, n, r, p, key_len)
+      result = nil
+
+      FFI::MemoryPointer.new(:char, key_len) do |buffer|
+        retval = SCrypt::Ext.crypto_scrypt(
+          secret, secret.length, salt, salt.length,
+          n, r, p,
+          buffer, key_len
+        )
+        if retval == 0
+          result = buffer.read_string(key_len)
+        else
+          raise "scrypt error #{retval}"
+        end
+      end
+
+      result
     end
   end
 
