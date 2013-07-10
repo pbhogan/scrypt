@@ -8,6 +8,12 @@ require "ffi"
 
 module SCrypt
 
+  module Ext
+    # Bind the external functions
+    attach_function :sc_calibrate, [:size_t, :double, :double, :pointer], :int, :blocking => true
+    attach_function :crypto_scrypt, [:pointer, :size_t, :pointer, :size_t, :uint64, :uint32, :uint32, :pointer, :size_t], :int, :blocking => true # todo
+  end
+
   module Errors
     class InvalidSalt   < StandardError; end  # The salt parameter provided is invalid.
     class InvalidHash   < StandardError; end  # The hash parameter provided is invalid.
@@ -121,23 +127,19 @@ module SCrypt
     class Calibration < FFI::Struct
       layout  :n, :uint64,
               :r, :uint32,
-              :p, :uint32,
-              :size, :uint64
+              :p, :uint32
     end
 
     def self.__sc_calibrate(max_mem, max_memfrac, max_time)
       result = nil
 
-      FFI::MemoryPointer.new :uint8, Calibration.size, false do |pointer|
-        calibration = Calibration.new pointer
-        calibration[:size] = max_mem
-        retval = SCrypt::Ext.sc_calibrate(max_memfrac, max_time, calibration)
+      calibration = Calibration.new
+      retval = SCrypt::Ext.sc_calibrate(max_mem, max_memfrac, max_time, calibration)
 
-        if retval == 0
-          result = [calibration[:n], calibration[:r], calibration[:p]]
-        else
-          raise "calibration error #{result}"
-        end
+      if retval == 0
+        result = [calibration[:n], calibration[:r], calibration[:p]]
+      else
+        raise "calibration error #{result}"
       end
 
       result
@@ -146,20 +148,16 @@ module SCrypt
     def self.__sc_crypt(secret, salt, n, r, p, key_len)
       result = nil
 
-      FFI::MemoryPointer.new :uint8, Calibration.size, false do |pointer|
-        calibration = Calibration.new pointer
-        calibration[:n] = n
-        calibration[:r] = r
-        calibration[:p] = p
-        calibration[:size] = key_len
-
-        FFI::MemoryPointer.new(:uint8, key_len, false) do |buffer|
-          retval = SCrypt::Ext.sc_crypt(secret, salt, buffer, calibration)
-          if retval == 0
-            result = buffer.get_string(0, key_len)
-          else
-            raise "scrypt error #{retval}"
-          end
+      FFI::MemoryPointer.new(:char, key_len) do |buffer|
+        retval = SCrypt::Ext.crypto_scrypt(
+          secret, secret.length, salt, salt.length,
+          n, r, p,
+          buffer, key_len
+        )
+        if retval == 0
+          result = buffer.read_string(key_len)
+        else
+          raise "scrypt error #{retval}"
         end
       end
 

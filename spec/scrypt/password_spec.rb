@@ -14,9 +14,9 @@ describe "Creating a hashed password" do
   end
 
   it "should behave normally if the secret is not a string" do
-    lambda { SCrypt::Password.create(nil) }.should_not raise_error(SCrypt::Errors::InvalidSecret)
-    lambda { SCrypt::Password.create({:woo => "yeah"}) }.should_not raise_error(SCrypt::Errors::InvalidSecret)
-    lambda { SCrypt::Password.create(false) }.should_not raise_error(SCrypt::Errors::InvalidSecret)
+    lambda { SCrypt::Password.create(nil) }.should_not raise_error
+    lambda { SCrypt::Password.create({:woo => "yeah"}) }.should_not raise_error
+    lambda { SCrypt::Password.create(false) }.should_not raise_error
   end
 
   it "should tolerate empty string secrets" do
