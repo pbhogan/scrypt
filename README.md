@@ -1,7 +1,3 @@
-## Note: scrypt needs a new maintainer
-
-Please get in touch if you would like to take over this project. Thanks!
-
 scrypt [![Build Status](https://secure.travis-ci.org/pbhogan/scrypt.png)](http://travis-ci.org/pbhogan/scrypt)
 ======
 
