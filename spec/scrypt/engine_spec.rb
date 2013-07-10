@@ -47,8 +47,8 @@ describe "Generating SCrypt hashes" do
 
   it "should raise an InvalidSecret error if the secret is invalid" do
     lambda { SCrypt::Engine.hash_secret(MyInvalidSecret.new, @salt) }.should raise_error(SCrypt::Errors::InvalidSecret)
-    lambda { SCrypt::Engine.hash_secret(nil, @salt) }.should_not raise_error(SCrypt::Errors::InvalidSecret)
-    lambda { SCrypt::Engine.hash_secret(false, @salt) }.should_not raise_error(SCrypt::Errors::InvalidSecret)
+    lambda { SCrypt::Engine.hash_secret(nil, @salt) }.should_not raise_error
+    lambda { SCrypt::Engine.hash_secret(false, @salt) }.should_not raise_error
   end
 
   it "should call #to_s on the secret and use the return value as the actual secret data" do
