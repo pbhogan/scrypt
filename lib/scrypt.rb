@@ -235,7 +235,11 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2))
+      s2 = SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2)
+      return false if empty? || length != s2.length
+      # Constant-time comparison to resist timing attacks
+      test = unpack('c*').zip(s2.unpack('c*')).map{|a,b| a^b }
+      test.reduce(:+) == 0
     end
     alias_method :is_password?, :==
 
