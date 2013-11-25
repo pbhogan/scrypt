@@ -7,3 +7,4 @@ ext/mri/*.bundle
 .DS_Store
 
 ext/mri/Makefile
+Gemfile.lock
