@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = SCrypt::VERSION
   s.authors     = ["Patrick Hogan"]
   s.email       = ["pbhogan@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/pbhogan/scrypt"
   s.summary     = "scrypt password hashing algorithm."
   s.description = <<-EOF
     The scrypt key derivation function is designed to be far

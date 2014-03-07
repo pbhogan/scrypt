@@ -38,7 +38,7 @@
 
 #include "scryptenc_cpuperf.h"
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
 struct timespec {
 	long tv_sec;
 	long tv_nsec;
