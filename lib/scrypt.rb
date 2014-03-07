@@ -104,7 +104,7 @@ module SCrypt
     # Example:
     #
     #   # should take less than 200ms
-    #   SCrypt.calibrate(:max_time => 0.2)
+    #   SCrypt::Engine.calibrate(:max_time => 0.2)
     #
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
