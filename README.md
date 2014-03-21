@@ -63,10 +63,10 @@ SCrypt::Engine.hash_secret "my grand secret", salt
 
 ```ruby
 # store it safely in the user model
-@user.update_attribute(:password, @password)
+user.update_attribute(:password, @password)
 
 # read it back later
-@user.reload!
-@password = SCrypt::Password.new(@user.password)
-@password == "my grand secret" # => true
+user.reload!
+password = SCrypt::Password.new(user.password)
+password == "my grand secret" # => true
 ```
