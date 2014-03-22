@@ -26,12 +26,12 @@ It works pretty similarly to ruby-bcrypt with a few minor differences, especiall
 require "scrypt"
 
 # hash a user's password
-@password = SCrypt::Password.create("my grand secret")
+password = SCrypt::Password.create("my grand secret")
 # => "400$8$36$78f4ae6983f76119$37ec6ce55a2b928dc56ff9a7d0cdafbd7dbde49d9282c38a40b1434e88f24cf5"
 
 # compare to strings
-@password == "my grand secret" # => true
-@password == "a paltry guess"  # => false
+password == "my grand secret" # => true
+password == "a paltry guess"  # => false
 ```
 
 Password.create takes five options which will determine the key length and salt size, as well as the cost limits of the computation:
@@ -63,10 +63,10 @@ SCrypt::Engine.hash_secret "my grand secret", salt
 
 ```ruby
 # store it safely in the user model
-@user.update_attribute(:password, @password)
+user.update_attribute(:password, @password)
 
 # read it back later
-@user.reload!
-@password = SCrypt::Password.new(@user.password)
-@password == "my grand secret" # => true
+user.reload!
+password = SCrypt::Password.new(user.password)
+password == "my grand secret" # => true
 ```
