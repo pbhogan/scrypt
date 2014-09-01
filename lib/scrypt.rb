@@ -150,7 +150,7 @@ module SCrypt
 
       FFI::MemoryPointer.new(:char, key_len) do |buffer|
         retval = SCrypt::Ext.crypto_scrypt(
-          secret, secret.length, salt, salt.length,
+          secret, secret.bytesize, salt, salt.bytesize,
           n, r, p,
           buffer, key_len
         )
