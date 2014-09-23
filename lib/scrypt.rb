@@ -188,7 +188,7 @@ module SCrypt
   #
   class Password < String
     # The hash portion of the stored password hash.
-    attr_reader :hash
+    attr_reader :checksum
     # The salt of the store password hash
     attr_reader :salt
     # The cost factor used to create the hash.
@@ -227,7 +227,7 @@ module SCrypt
     def initialize(raw_hash)
       if valid_hash?(raw_hash)
         self.replace(raw_hash)
-        @cost, @salt, @hash = split_hash(self.to_s)
+        @cost, @salt, @checksum = split_hash(self.to_s)
       else
         raise Errors::InvalidHash.new("invalid hash")
       end
@@ -235,7 +235,7 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2))
+      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.checksum.length / 2))
     end
     alias_method :is_password?, :==
 
