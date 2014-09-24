@@ -100,17 +100,17 @@ describe "non-default key lengths" do
 
   it "should enforce a minimum keylength of 16 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 15)
-    @password.checksum.length.should eq(16 * 2)
+    @password.digest.length.should eq(16 * 2)
   end
 
   it "should allow a keylength of 512 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 512)
-    @password.checksum.length.should eq(512 * 2)
+    @password.digest.length.should eq(512 * 2)
   end
 
   it "should enforce a maximum keylength of 512 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 513)
-    @password.checksum.length.should eq(512 * 2)
+    @password.digest.length.should eq(512 * 2)
   end
 
   it "should properly compare a non-standard hash" do
