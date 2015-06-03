@@ -16,6 +16,15 @@ describe "Generating SCrypt salts" do
   it "should produce random data" do
     SCrypt::Engine.generate_salt.should_not equal(SCrypt::Engine.generate_salt)
   end
+
+  it "should used the saved cost factor" do
+    # Verify cost is different before saving
+    cost = SCrypt::Engine.calibrate(:max_time => 0.01)
+    SCrypt::Engine.generate_salt(:max_time => 30, :max_mem => 64*1024*1024).should_not start_with(cost)
+
+    cost = SCrypt::Engine.calibrate!(:max_time => 0.01)
+    SCrypt::Engine.generate_salt(:max_time => 30, :max_mem => 64*1024*1024).should start_with(cost)
+  end
 end
 
 
