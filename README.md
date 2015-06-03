@@ -41,6 +41,7 @@ Password.create takes five options which will determine the key length and salt 
 * `:max_time` specifies the maximum number of seconds the computation should take.
 * `:max_mem` specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
 * `:max_memfrac` specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
+* `:cost` specifies a cost string (e.g. `'400$8$19$'`) from the `calibrate` method.  The `:max_*` options will be ignored if this option is given, or if `calibrate!` has been called.
 
 Default options will result in calculation time of approx. 200 ms with 1 MB memory use.
 
@@ -57,6 +58,12 @@ salt = SCrypt::Engine.generate_salt
 
 SCrypt::Engine.hash_secret "my grand secret", salt
 # => "400$8$26$b62e0f787a5fc373$0399ccd4fa26642d92741b17c366b7f6bd12ccea5214987af445d2bed97bc6a2"
+
+SCrypt::Engine.calibrate!(max_mem: 16 * 1024 * 1024)
+# => "4000$8$4$"
+
+SCrypt::Engine.generate_salt
+# => "4000$8$4$c6d101522d3cb045"
 ```
 
 ## Usage in Rails (and the like)
