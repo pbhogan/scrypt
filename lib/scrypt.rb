@@ -26,7 +26,8 @@ module SCrypt
       :salt_size   => 8,
       :max_mem     => 1024 * 1024,
       :max_memfrac => 0.5,
-      :max_time    => 0.2
+      :max_time    => 0.2,
+      :cost        => nil
     }
 
     def self.scrypt(secret, salt, *args)
@@ -67,10 +68,14 @@ module SCrypt
       end
     end
 
-    # Generates a random salt with a given computational cost.
+    # Generates a random salt with a given computational cost.  Uses a saved
+    # cost if SCrypt::Engine.calibrate! has been called.
+    #
+    # Options:
+    # <tt>:cost</tt> is a cost string returned by SCrypt::Engine.calibrate
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
-      cost = calibrate(options)
+      cost = options[:cost] || calibrate(options)
       salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16,'0')
       if salt.length == 40
         #If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
@@ -109,6 +114,12 @@ module SCrypt
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
       "%x$%x$%x$" % __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
+    end
+    
+    # Calls SCrypt::Engine.calibrate and saves the cost string for future calls to
+    # SCrypt::Engine.generate_salt.
+    def self.calibrate!(options = {})
+      DEFAULTS[:cost] = calibrate(options)
     end
 
     # Computes the memory use of the given +cost+
