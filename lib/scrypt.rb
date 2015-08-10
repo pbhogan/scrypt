@@ -1,6 +1,7 @@
 # A wrapper for the scrypt algorithm.
 
 require "scrypt/scrypt_ext"
+require "scrypt/security_utils"
 require "openssl"
 require "scanf"
 require "ffi"
@@ -246,7 +247,7 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.digest.length / 2))
+      SecurityUtils.secure_compare(self, SCrypt::Engine.hash_secret(secret, @cost + @salt, self.digest.length / 2))
     end
     alias_method :is_password?, :==
 
