@@ -7,3 +7,4 @@ rvm:
   - rbx-2
   - jruby-19mode
   - jruby-head
+sudo: false
