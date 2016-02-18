@@ -24,8 +24,8 @@ module SCrypt
   class Engine
     DEFAULTS = {
       :key_len     => 32,
-      :salt_size   => 8,
-      :max_mem     => 1024 * 1024,
+      :salt_size   => 32,
+      :max_mem     => 16 * 1024 * 1024,
       :max_memfrac => 0.5,
       :max_time    => 0.2,
       :cost        => nil
