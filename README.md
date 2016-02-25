@@ -37,13 +37,13 @@ password == "a paltry guess"  # => false
 Password.create takes five options which will determine the key length and salt size, as well as the cost limits of the computation:
 
 * `:key_len` specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum is 512 bytes (4096 bits).
-* `:salt_size` specifies the size in bytes of the random salt you want to generate. The default and minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
+* `:salt_size` specifies the size in bytes of the random salt you want to generate. The default and maximum is 32 bytes (256 bits). Minimum is 8 bytes (64 bits).
 * `:max_time` specifies the maximum number of seconds the computation should take.
 * `:max_mem` specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
 * `:max_memfrac` specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
 * `:cost` specifies a cost string (e.g. `'400$8$19$'`) from the `calibrate` method.  The `:max_*` options will be ignored if this option is given, or if `calibrate!` has been called.
 
-Default options will result in calculation time of approx. 200 ms with 1 MB memory use.
+Default options will result in calculation time of approx. 200 ms with 16 MB memory use.
 
 ## Other things you can do
 
