@@ -4,7 +4,7 @@
 Changes:
 
 * Uses more secure defaults: Increased max_mem from 1MB to 16MB, and salt_len from 8 to 32 bytes.
-* See discussion: #25
+* See discussion at https://github.com/pbhogan/scrypt/issues/25
 
 
 
