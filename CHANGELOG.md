@@ -1,3 +1,12 @@
+2.1.1
+-----
+
+Changes:
+
+* Uses more secure defaults: Increased max_mem from 1MB to 16MB, and salt_len from 8 to 32 bytes.
+* See discussion: #25
+
+
 
 2.0.1
 -----
@@ -16,12 +25,3 @@ Breaking Changes:
 * `SCrypt::Password#hash` has been renamed to `#checksum`
   (https://github.com/pbhogan/scrypt/commit/a1a60e06ec9d863c3156ac06fda32ce82cddd759)
 
-
-
-2.1.1
------
-
-Changes:
-
-* Uses more secure defaults: Increased max_mem from 1MB to 16MB, and salt_len from 8 to 32 bytes.
-* See discussion: #25
