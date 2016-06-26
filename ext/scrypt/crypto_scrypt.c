@@ -44,6 +44,7 @@
 #include "crypto_scrypt_smix_sse2.h"
 
 #include "crypto_scrypt.h"
+#include "warnp.h"
 
 static void (*smix_func)(uint8_t *, size_t, uint64_t, void *, void *) = NULL;
 
