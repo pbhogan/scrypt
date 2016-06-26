@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Patrick Hogan", "Stephen von Takach", "Rene van Paassen" ]
   s.email       = ["pbhogan@gmail.com", "steve@advancedcontrol.com.au",
                    "rene.vanpaassen@gmail.com" ]
-  s.cert_chain  = ['certs/gem-public_cert.pem']
+  s.cert_chain  = ['certs/stakach.pem']
   s.license     = 'MIT'
   s.signing_key = File.expand_path("~/.ssh/gem-private_key.pem") if $0 =~ /gem\z/
   s.homepage    = "https://github.com/pbhogan/scrypt"
