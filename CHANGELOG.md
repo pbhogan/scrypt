@@ -1,3 +1,12 @@
+3.0.0
+-----
+
+Changes:
+
+* Updated of core scrypt ext code: https://github.com/pbhogan/scrypt/pull/53
+* Support for platforms other than x86 such as ARM
+
+
 2.1.1
 -----
 
