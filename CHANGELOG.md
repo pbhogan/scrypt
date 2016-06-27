@@ -1,11 +1,14 @@
 3.0.0
 -----
 
-Changes:
+Breaking Changes:
+
+* None
+
+Added:
 
 * Updated of core scrypt ext code: https://github.com/pbhogan/scrypt/pull/53
 * Support for platforms other than x86 such as ARM
-
 
 2.1.1
 -----
@@ -15,16 +18,12 @@ Changes:
 * Uses more secure defaults: Increased max_mem from 1MB to 16MB, and salt_len from 8 to 32 bytes.
 * See discussion at https://github.com/pbhogan/scrypt/issues/25
 
-
-
 2.0.1
 -----
 
 Changes:
 * Adds a `:cost` option for specifying a cost string (e.g. `'400$8$19$'`) from the `calibrate` method
   (https://github.com/pbhogan/scrypt/commit/95ce6e3e37f4b2e8681a544713bfe783d2d69466)
-
-
 
 2.0.0
 -----
