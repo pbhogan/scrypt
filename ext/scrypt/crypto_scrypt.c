@@ -29,13 +29,13 @@
 /* #include "bsdtar_platform.h" */
 
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "mman.h"
 #include "cpusupport.h"
 #include "sha256.h"
 //#include "warnp.h"
