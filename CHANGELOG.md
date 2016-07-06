@@ -1,3 +1,11 @@
+3.0.1
+-----
+
+Fixed:
+
+* Windows support was broken in 3.0.0
+
+
 3.0.0
 -----
 

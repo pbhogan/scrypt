@@ -29,8 +29,12 @@
 /* #include "bsdtar_platform.h" */
 
 #include <sys/types.h>
-#include <sys/mman.h>
-
+#if !defined(WINDOWS_OS)
+ 	#include <sys/mman.h>
+ 	#ifndef HAVE_MMAP
+		#define HAVE_MMAP 1
+ 	#endif
+#endif
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>

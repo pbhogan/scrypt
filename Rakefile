@@ -29,6 +29,8 @@ namespace "ffi-compiler" do
     t.cflags << "-D_GNU_SOURCE=1" if RbConfig::CONFIG["host_os"].downcase =~ /mingw/
     t.cflags << "-arch x86_64 -arch i386" if t.platform.mac?
     t.ldflags << "-arch x86_64 -arch i386" if t.platform.mac?
+
+    t.add_define 'WINDOWS_OS' if FFI::Platform.windows?
   end
 end
 task :compile_ffi => ["ffi-compiler:default"]

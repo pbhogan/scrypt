@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   EOF
 
-  s.add_dependency 'ffi-compiler', '>= 0.0.2'
+  s.add_dependency 'ffi-compiler', '>= 1.0.0'
   s.add_dependency 'rake'
   s.add_development_dependency "rspec"
   s.add_development_dependency "rdoc"
