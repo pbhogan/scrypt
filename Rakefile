@@ -27,6 +27,7 @@ namespace "ffi-compiler" do
     t.cflags << "-Wall -std=c99"
     t.cflags << "-msse -msse2" if t.platform.arch.include? "86"
     t.cflags << "-D_GNU_SOURCE=1" if RbConfig::CONFIG["host_os"].downcase =~ /mingw/
+    t.cflags << "-D__need_timespec" if RbConfig::CONFIG['host_os'].downcase =~ /linux/
     t.cflags << "-arch x86_64 -arch i386" if t.platform.mac?
     t.ldflags << "-arch x86_64 -arch i386" if t.platform.mac?
 
@@ -61,5 +62,3 @@ Gem::PackageTask.new(gem_spec) do |pkg|
   pkg.need_tar = true
   pkg.package_dir = 'pkg'
 end
-
-
