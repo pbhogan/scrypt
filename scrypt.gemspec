@@ -19,11 +19,11 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   EOF
 
-  s.add_dependency 'ffi-compiler', '>= 1.0.0'
-  s.add_dependency 'rake'
-  s.add_development_dependency "rspec"
-  s.add_development_dependency "rdoc"
-  s.add_development_dependency "awesome_print"
+  s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
+  s.add_dependency 'rake', '>= 9', '< 12'
+  s.add_development_dependency 'rspec', '>= 3', '< 4'
+  s.add_development_dependency 'rdoc', '>= 4', '< 5'
+  s.add_development_dependency 'awesome_print', '>= 1', '< 2'
 
   s.rubyforge_project = "scrypt"
 
