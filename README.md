@@ -70,7 +70,7 @@ SCrypt::Engine.generate_salt
 
 ```ruby
 # store it safely in the user model
-user.update_attribute(:password, @password)
+user.update_attribute(:password, SCrypt::Password.create("my grand secret"))
 
 # read it back later
 user.reload!
