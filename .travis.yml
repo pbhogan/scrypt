@@ -6,7 +6,6 @@ rvm:
   - ruby-2.3.3
   - ruby-2.4.0
   - ruby-head
-  - rubinius-2
   - rubinius-3
   - rubinius
   - jruby-19mode
