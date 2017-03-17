@@ -1,9 +1,16 @@
-3.0.3
+3.0.4
 -----
 
 Fixed:
 
 * Compilation on Archlinux
+
+3.0.3
+-----
+
+Fixed:
+
+* ~Compilation on Archlinux~
 
 
 3.0.2
