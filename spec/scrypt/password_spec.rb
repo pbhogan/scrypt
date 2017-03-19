@@ -132,8 +132,8 @@ describe "Old-style hashes" do
 end
 
 describe "Respecting standard ruby behaviors" do
-  it 'should hash as a fixnum' do
+  it 'should hash as an integer' do
     password = SCrypt::Password.create('')
-    expect(password.hash).to be_kind_of(Fixnum)
+    expect(password.hash).to be_kind_of(Integer)
   end
 end
