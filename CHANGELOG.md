@@ -1,3 +1,10 @@
+3.0.5
+-----
+
+Changes:
+
+* Make `rake` development dependency not runtime
+
 3.0.4
 -----
 
