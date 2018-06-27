@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["pbhogan@gmail.com", "steve@advancedcontrol.com.au",
                    "rene.vanpaassen@gmail.com" ]
   s.cert_chain  = ['certs/stakach.pem']
-  s.license     = 'MIT'
+  s.license     = 'BSD-3-Clause'
   s.signing_key = File.expand_path("~/.ssh/gem-private_key.pem") if $0 =~ /gem\z/
   s.homepage    = "https://github.com/pbhogan/scrypt"
   s.summary     = "scrypt password hashing algorithm."
