@@ -14,7 +14,7 @@ require 'rubygems/package_task'
 
 require 'rdoc/task'
 
-task :default => %i[clean compile_ffi spec]
+task :default => [:clean, :compile_ffi, :spec]
 
 desc 'clean, make and run specs'
 task :spec do
