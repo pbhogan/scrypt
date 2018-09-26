@@ -1,12 +1,21 @@
 require 'ffi-compiler/compile_task'
 
+target_cpu = RbConfig::CONFIG['target_cpu']
+
 FFI::Compiler::CompileTask.new('scrypt_ext') do |t|
-  t.cflags << "-Wall -std=c99"
-  t.cflags << "-msse -msse2" if t.platform.arch.include? "86"
-  t.cflags << "-D_GNU_SOURCE=1" if RbConfig::CONFIG["host_os"].downcase =~ /mingw/
-  t.cflags << "-D_POSIX_C_SOURCE=199309L" if RbConfig::CONFIG['host_os'].downcase =~ /linux/
-  t.cflags << "-arch x86_64 -arch i386" if t.platform.mac?
-  t.ldflags << "-arch x86_64 -arch i386" if t.platform.mac?
+  t.cflags << '-Wall -std=c99'
+  t.cflags << '-msse -msse2' if t.platform.arch.include? '86'
+  t.cflags << '-D_GNU_SOURCE=1' if RbConfig::CONFIG['host_os'].downcase =~ /mingw/
+  t.cflags << '-D_POSIX_C_SOURCE=199309L' if RbConfig::CONFIG['host_os'].downcase =~ /linux/
+
+  if 1.size == 4 && target_cpu =~ /i386|x86_32/
+    t.cflags << '-arch i386'
+    t.ldflags << '-arch i386'
+  elsif 1.size == 8 && target_cpu =~ /i686|x86_64/
+    t.cflags << '-arch x86_64'
+    t.ldflags << '-arch x86_64'
+  end
+
   t.export '../../lib/scrypt/scrypt_ext.rb'
 
   t.add_define 'WINDOWS_OS' if FFI::Platform.windows?
