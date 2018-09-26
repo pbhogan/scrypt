@@ -1,6 +1,7 @@
 # A wrapper for the scrypt algorithm.
 
 require "scrypt/scrypt_ext"
+require "scrypt/security_utils"
 require "openssl"
 require "scanf"
 require "ffi"
@@ -23,10 +24,11 @@ module SCrypt
   class Engine
     DEFAULTS = {
       :key_len     => 32,
-      :salt_size   => 8,
-      :max_mem     => 1024 * 1024,
+      :salt_size   => 32,
+      :max_mem     => 16 * 1024 * 1024,
       :max_memfrac => 0.5,
-      :max_time    => 0.2
+      :max_time    => 0.2,
+      :cost        => nil
     }
 
     def self.scrypt(secret, salt, *args)
@@ -67,10 +69,14 @@ module SCrypt
       end
     end
 
-    # Generates a random salt with a given computational cost.
+    # Generates a random salt with a given computational cost.  Uses a saved
+    # cost if SCrypt::Engine.calibrate! has been called.
+    #
+    # Options:
+    # <tt>:cost</tt> is a cost string returned by SCrypt::Engine.calibrate
     def self.generate_salt(options = {})
       options = DEFAULTS.merge(options)
-      cost = calibrate(options)
+      cost = options[:cost] || calibrate(options)
       salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16,'0')
       if salt.length == 40
         #If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
@@ -104,11 +110,17 @@ module SCrypt
     # Example:
     #
     #   # should take less than 200ms
-    #   SCrypt.calibrate(:max_time => 0.2)
+    #   SCrypt::Engine.calibrate(:max_time => 0.2)
     #
     def self.calibrate(options = {})
       options = DEFAULTS.merge(options)
       "%x$%x$%x$" % __sc_calibrate(options[:max_mem], options[:max_memfrac], options[:max_time])
+    end
+    
+    # Calls SCrypt::Engine.calibrate and saves the cost string for future calls to
+    # SCrypt::Engine.generate_salt.
+    def self.calibrate!(options = {})
+      DEFAULTS[:cost] = calibrate(options)
     end
 
     # Computes the memory use of the given +cost+
@@ -150,7 +162,7 @@ module SCrypt
 
       FFI::MemoryPointer.new(:char, key_len) do |buffer|
         retval = SCrypt::Ext.crypto_scrypt(
-          secret, secret.length, salt, salt.length,
+          secret, secret.bytesize, salt, salt.bytesize,
           n, r, p,
           buffer, key_len
         )
@@ -188,7 +200,7 @@ module SCrypt
   #
   class Password < String
     # The hash portion of the stored password hash.
-    attr_reader :hash
+    attr_reader :digest
     # The salt of the store password hash
     attr_reader :salt
     # The cost factor used to create the hash.
@@ -227,7 +239,7 @@ module SCrypt
     def initialize(raw_hash)
       if valid_hash?(raw_hash)
         self.replace(raw_hash)
-        @cost, @salt, @hash = split_hash(self.to_s)
+        @cost, @salt, @digest = split_hash(self.to_s)
       else
         raise Errors::InvalidHash.new("invalid hash")
       end
@@ -235,7 +247,7 @@ module SCrypt
 
     # Compares a potential secret against the hash. Returns true if the secret is the original secret, false otherwise.
     def ==(secret)
-      super(SCrypt::Engine.hash_secret(secret, @cost + @salt, self.hash.length / 2))
+      SecurityUtils.secure_compare(self, SCrypt::Engine.hash_secret(secret, @cost + @salt, self.digest.length / 2))
     end
     alias_method :is_password?, :==
 

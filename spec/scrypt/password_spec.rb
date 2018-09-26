@@ -6,23 +6,23 @@ describe "Creating a hashed password" do
   end
 
   it "should return a SCrypt::Password" do
-    @password.should be_an_instance_of(SCrypt::Password)
+    expect(@password).to be_an_instance_of(SCrypt::Password)
   end
 
   it "should return a valid password" do
-    lambda { SCrypt::Password.new(@password) }.should_not raise_error
+    expect(lambda { SCrypt::Password.new(@password) }).to_not raise_error
   end
 
   it "should behave normally if the secret is not a string" do
-    lambda { SCrypt::Password.create(nil) }.should_not raise_error
-    lambda { SCrypt::Password.create({:woo => "yeah"}) }.should_not raise_error
-    lambda { SCrypt::Password.create(false) }.should_not raise_error
+    expect(lambda { SCrypt::Password.create(nil) }).to_not raise_error
+    expect(lambda { SCrypt::Password.create({:woo => "yeah"}) }).to_not raise_error
+    expect(lambda { SCrypt::Password.create(false) }).to_not raise_error
   end
 
   it "should tolerate empty string secrets" do
-    lambda { SCrypt::Password.create( "\n".chop  ) }.should_not raise_error
-    lambda { SCrypt::Password.create( ""         ) }.should_not raise_error
-    lambda { SCrypt::Password.create( String.new ) }.should_not raise_error
+    expect(lambda { SCrypt::Password.create( "\n".chop  ) }).to_not raise_error
+    expect(lambda { SCrypt::Password.create( ""         ) }).to_not raise_error
+    expect(lambda { SCrypt::Password.create( String.new ) }).to_not raise_error
   end
 end
 
@@ -35,13 +35,13 @@ describe "Reading a hashed password" do
 
   it "should read the cost, salt, and hash" do
     password = SCrypt::Password.new(@hash)
-    password.cost.should == "400$8$d$"
-    password.salt.should == "173a8189751c095a29b933789560b73bf17b2e01"
-    password.to_s.should == @hash
+    expect(password.cost).to eq("400$8$d$")
+    expect(password.salt).to eq("173a8189751c095a29b933789560b73bf17b2e01")
+    expect(password.to_s).to eq(@hash)
   end
 
   it "should raise an InvalidHashError when given an invalid hash" do
-    lambda { SCrypt::Password.new('not a valid hash') }.should raise_error(SCrypt::Errors::InvalidHash)
+    expect(lambda { SCrypt::Password.new('not a valid hash') }).to raise_error(SCrypt::Errors::InvalidHash)
   end
 end
 
@@ -52,11 +52,11 @@ describe "Comparing a hashed password with a secret" do
   end
 
   it "should compare successfully to the original secret" do
-    (@password == @secret).should be(true)
+    expect((@password == @secret)).to be(true)
   end
 
   it "should compare unsuccessfully to anything besides original secret" do
-    (@password == "@secret").should be(false)
+    expect((@password == "@secret")).to be(false)
   end
 
 end
@@ -68,27 +68,27 @@ describe "non-default salt sizes" do
 
   it "should enforce a minimum salt of 8 bytes" do
     @password = SCrypt::Password.create(@secret, :salt_size => 7)
-    @password.salt.length.should eq(8 * 2)
+    expect(@password.salt.length).to eq(8 * 2)
   end
 
   it "should allow a salt of 32 bytes" do
     @password = SCrypt::Password.create(@secret, :salt_size => 32)
-    @password.salt.length.should eq(32 * 2)
+    expect(@password.salt.length).to eq(32 * 2)
   end
 
   it "should enforce a maximum salt of 32 bytes" do
     @password = SCrypt::Password.create(@secret, :salt_size => 33)
-    @password.salt.length.should eq(32 * 2)
+    expect(@password.salt.length).to eq(32 * 2)
   end
 
   it "should pad a 20-byte salt to not look like a 20-byte SHA1" do
     @password = SCrypt::Password.create(@secret, :salt_size => 20)
-    @password.salt.length.should eq(41)
+    expect(@password.salt.length).to eq(41)
   end
 
   it "should properly compare a non-standard salt hash" do
     @password = SCrypt::Password.create(@secret, :salt_size => 20)
-    (SCrypt::Password.new(@password.to_s) == @secret).should be(true)
+    expect((SCrypt::Password.new(@password.to_s) == @secret)).to be(true)
   end
 
 end
@@ -100,22 +100,22 @@ describe "non-default key lengths" do
 
   it "should enforce a minimum keylength of 16 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 15)
-    @password.hash.length.should eq(16 * 2)
+    expect(@password.digest.length).to eq(16 * 2)
   end
 
   it "should allow a keylength of 512 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 512)
-    @password.hash.length.should eq(512 * 2)
+    expect(@password.digest.length).to eq(512 * 2)
   end
 
   it "should enforce a maximum keylength of 512 bytes" do
     @password = SCrypt::Password.create(@secret, :key_len => 513)
-    @password.hash.length.should eq(512 * 2)
+    expect(@password.digest.length).to eq(512 * 2)
   end
 
   it "should properly compare a non-standard hash" do
     @password = SCrypt::Password.create(@secret, :key_len => 512)
-    (SCrypt::Password.new(@password.to_s) == @secret).should be(true)
+    expect((SCrypt::Password.new(@password.to_s) == @secret)).to be(true)
   end
 
 end
@@ -127,6 +127,13 @@ describe "Old-style hashes" do
   end
 
   it "should compare successfully" do
-    (SCrypt::Password.new(@hash) == @secret).should be(true)
+    expect((SCrypt::Password.new(@hash) == @secret)).to be(true)
+  end
+end
+
+describe "Respecting standard ruby behaviors" do
+  it 'should hash as an integer' do
+    password = SCrypt::Password.create('')
+    expect(password.hash).to be_kind_of(Integer)
   end
 end

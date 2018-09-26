@@ -1,7 +1,20 @@
 language: ruby
 rvm:
-  - "1.9.3"
-  - "2.0.0"
-  - rbx-19mode
+  - ruby-1.9.3-p551
+  - ruby-2.1.9
+  - ruby-2.2.5
+  - ruby-2.3.3
+  - ruby-2.4.0
+  - ruby-head
+  - rubinius-3
+  - rubinius
   - jruby-19mode
-  - jruby-20mode
+  - jruby-9.1.8.0
+  - jruby-head
+sudo: required
+dist: trusty
+matrix:
+  allow_failures:
+    - rvm: jruby-head
+    - rvm: ruby-head
+    - rvm: rubinius

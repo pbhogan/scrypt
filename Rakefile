@@ -24,10 +24,14 @@ end
 desc "FFI compiler"
 namespace "ffi-compiler" do
   FFI::Compiler::CompileTask.new('ext/scrypt/scrypt_ext') do |t|
-    t.cflags << "-Wall -msse -msse2"
+    t.cflags << "-Wall -std=c99"
+    t.cflags << "-msse -msse2" if t.platform.arch.include? "86"
     t.cflags << "-D_GNU_SOURCE=1" if RbConfig::CONFIG["host_os"].downcase =~ /mingw/
+    t.cflags << "-D_POSIX_C_SOURCE=199309L" if RbConfig::CONFIG['host_os'].downcase =~ /linux/
     t.cflags << "-arch x86_64 -arch i386" if t.platform.mac?
     t.ldflags << "-arch x86_64 -arch i386" if t.platform.mac?
+
+    t.add_define 'WINDOWS_OS' if FFI::Platform.windows?
   end
 end
 task :compile_ffi => ["ffi-compiler:default"]
@@ -58,5 +62,3 @@ Gem::PackageTask.new(gem_spec) do |pkg|
   pkg.need_tar = true
   pkg.package_dir = 'pkg'
 end
-
-

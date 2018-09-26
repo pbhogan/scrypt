@@ -1,4 +1,5 @@
 source "http://rubygems.org"
-
-# Specify your gem's dependencies in scrypt.gemspec
 gemspec
+
+# Require the rubinius standard library for tests
+gem "rubysl", :platform => :rbx
