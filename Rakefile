@@ -9,6 +9,9 @@ require 'rspec/core/rake_task'
 require 'ffi'
 require 'ffi-compiler/compile_task'
 
+require 'digest/sha2'
+require './lib/scrypt/version'
+
 require 'rubygems'
 require 'rubygems/package_task'
 
@@ -19,6 +22,14 @@ task :default => [:clean, :compile_ffi, :spec]
 desc 'clean, make and run specs'
 task :spec do
   RSpec::Core::RakeTask.new
+end
+
+desc 'generate checksum'
+task :checksum do
+  built_gem_path = "pkg/scrypt-#{SCrypt::VERSION}.gem"
+  checksum = Digest::SHA512.new.hexdigest(File.read(built_gem_path))
+  checksum_path = "checksum/scrypt-#{SCrypt::VERSION}.gem.sha512"
+  File.open(checksum_path, 'w' ) {|f| f.write(checksum) }
 end
 
 desc 'FFI compiler'
@@ -69,3 +80,4 @@ Gem::PackageTask.new(gem_spec) do |pkg|
   pkg.need_tar = true
   pkg.package_dir = 'pkg'
 end
+

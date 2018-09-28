@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Patrick Hogan", "Stephen von Takach", "Rene van Paassen" ]
   s.email       = ["pbhogan@gmail.com", "steve@advancedcontrol.com.au",
                    "rene.vanpaassen@gmail.com" ]
-  s.cert_chain  = ['certs/stakach.pem']
+  s.cert_chain  = ['certs/pbhogan.pem']
   s.license     = 'BSD-3-Clause'
   s.signing_key = File.expand_path("~/.ssh/gem-private_key.pem") if $0 =~ /gem\z/
   s.homepage    = "https://github.com/pbhogan/scrypt"
@@ -34,3 +34,4 @@ Gem::Specification.new do |s|
   s.test_files = Dir.glob("spec/**/*")
   s.require_paths = ["lib"]
 end
+
