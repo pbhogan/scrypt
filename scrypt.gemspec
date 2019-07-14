@@ -25,8 +25,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rdoc', '>= 4', '< 5'
   s.add_development_dependency 'awesome_print', '>= 1', '< 2'
 
-  s.rubyforge_project = "scrypt"
-
   s.extensions = ["ext/scrypt/Rakefile"]
 
   s.files = %w(Rakefile scrypt.gemspec README.md COPYING) + Dir.glob("{lib,spec,autotest}/**/*")
