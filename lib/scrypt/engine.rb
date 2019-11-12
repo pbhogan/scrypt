@@ -53,7 +53,7 @@ module SCrypt
         else
           # New-style hash
           salt_only = [salt_only.sub(/^(00)+/, '')].pack('H*')
-          salt + '$' + scrypt(secret.to_s, salt_only, cost, key_len).unpack1('H*').rjust(key_len * 2, '0')
+          salt + '$' + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
         end
       end
 
@@ -65,7 +65,7 @@ module SCrypt
       def generate_salt(options = {})
         options = DEFAULTS.merge(options)
         cost = options[:cost] || calibrate(options)
-        salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack1('H*').rjust(16, '0')
+        salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16, '0')
 
         if salt.length == 40
           # If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
