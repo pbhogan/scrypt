@@ -1,18 +1,25 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.push File.expand_path('lib', __dir__)
+# rubocop:disable Performance/EndWith, Style/SpecialGlobalVars
+
+$:.push File.expand_path("../lib", __FILE__)
 require 'scrypt/version'
 
 Gem::Specification.new do |s|
   s.name        = 'scrypt'
   s.version     = SCrypt::VERSION
-  s.authors     = ['Patrick Hogan', 'Stephen von Takach', 'Rene van Paassen', 'Johanns Gregorian']
-  s.email       = ['pbhogan@gmail.com', 'steve@advancedcontrol.com.au',
-                   'rene.vanpaassen@gmail.com', 'io+scrypt@jsg.io']
+  s.authors     = ['Patrick Hogan',
+                   'Stephen von Takach',
+                   'Rene van Paassen',
+                   'Johanns Gregorian']
+  s.email       = ['pbhogan@gmail.com',
+                   'steve@advancedcontrol.com.au',
+                   'rene.vanpaassen@gmail.com',
+                   'io+scrypt@jsg.io']
   s.cert_chain  = ['certs/pbhogan.pem']
   s.license     = 'BSD-3-Clause'
 
-  s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if /gem\z/.match?($PROGRAM_NAME)
+  s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
 
   s.homepage    = 'https://github.com/pbhogan/scrypt'
   s.summary     = 'scrypt password hashing algorithm.'
@@ -41,3 +48,5 @@ Gem::Specification.new do |s|
   s.test_files = Dir.glob('spec/**/*')
   s.require_paths = ['lib']
 end
+
+# rubocop:enable
