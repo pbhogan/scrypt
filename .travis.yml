@@ -1,5 +1,12 @@
+dist: trusty
 language: ruby
 rvm:
+  - jruby-head
+  - jruby-19mode
+  - jruby-9.1.17.0
+  - rbx-3
+  - rbx-4
+  - ruby-head
   - ruby-1.9.3-p551
   - ruby-2.1.10
   - ruby-2.2.10
@@ -7,16 +14,12 @@ rvm:
   - ruby-2.4.9
   - ruby-2.5.7
   - ruby-2.6.5
-  - ruby-head
-  - rubinius-3
-  - rubinius
-  - jruby-19mode
-  - jruby-9.1.17.0
-  - jruby-head
-sudo: required
-dist: trusty
+  - truffleruby
 matrix:
   allow_failures:
-    - rvm: jruby-head
+    - rvm: rbx-3
+    - rvm: rbx-4
     - rvm: ruby-head
-    - rvm: rubinius
+    - rvm: jruby-head
+    - rvm: truffleruby
+sudo: required
