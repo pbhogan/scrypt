@@ -1,3 +1,20 @@
+3.0.7
+-----
+
+Changes:
+
+* Replaced `scanf` usage to avoid the need for a runtime dependency with the upcoming Ruby 2.7.
+* **Development:** Added Rubocop and rules to the project.
+* Refactored:
+    * Extracted (organized) `Engine`, `Errors` and `Password` class/modules into dedicated files in `scrypt` sub-directory.
+    * Logic and syntax cleanup and formatting.
+
+3.0.6
+-----
+Fixed:
+
+* Expanded complication flags in support of macOS Mojave.
+
 3.0.5
 -----
 
