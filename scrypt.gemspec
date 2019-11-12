@@ -35,9 +35,12 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake', '>= 9', '< 13'
   s.add_development_dependency 'rdoc', '>= 4', '< 5'
   s.add_development_dependency 'rspec', '>= 3', '< 4'
-  s.add_development_dependency 'rubocop', '>= 0.76.0', '< 1.0.0'
-  s.add_development_dependency 'rubocop-gitlab-security', '>= 0.1.1', '< 0.2'
-  s.add_development_dependency 'rubocop-performance', '>= 1.5.0', '< 1.6.0'
+
+  if RUBY_VERSION >= "2.5"
+    s.add_development_dependency 'rubocop', '>= 0.76.0', '< 1.0.0'
+    s.add_development_dependency 'rubocop-gitlab-security', '>= 0.1.1', '< 0.2'
+    s.add_development_dependency 'rubocop-performance', '>= 1.5.0', '< 1.6.0'
+  end
 
   s.rubyforge_project = 'scrypt'
 
