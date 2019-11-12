@@ -24,11 +24,11 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/pbhogan/scrypt'
   s.summary     = 'scrypt password hashing algorithm.'
 
-  s.description = <<-EOF
+  s.description = <<-DESC
     The scrypt key derivation function is designed to be far
     more secure against hardware brute-force attacks than
     alternative functions such as PBKDF2 or bcrypt.
-  EOF
+  DESC
 
   s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
   s.add_development_dependency 'awesome_print', '>= 1', '< 2'
@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rdoc', '>= 4', '< 5'
   s.add_development_dependency 'rspec', '>= 3', '< 4'
 
-  if RUBY_VERSION >= "2.5"
+  if RUBY_VERSION >= '2.5'
     s.add_development_dependency 'rubocop', '>= 0.76.0', '< 1.0.0'
     s.add_development_dependency 'rubocop-gitlab-security', '>= 0.1.1', '< 0.2'
     s.add_development_dependency 'rubocop-performance', '>= 1.5.0', '< 1.6.0'
