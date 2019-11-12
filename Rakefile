@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'bundler/setup'
 require 'bundler/gem_tasks'
 
@@ -17,7 +19,7 @@ require 'rubygems/package_task'
 
 require 'rdoc/task'
 
-task :default => [:clean, :compile_ffi, :spec]
+task default: [:clean, :compile_ffi, :spec]
 
 desc 'clean, make and run specs'
 task :spec do
@@ -29,7 +31,7 @@ task :checksum do
   built_gem_path = "pkg/scrypt-#{SCrypt::VERSION}.gem"
   checksum = Digest::SHA512.new.hexdigest(File.read(built_gem_path))
   checksum_path = "checksum/scrypt-#{SCrypt::VERSION}.gem.sha512"
-  File.open(checksum_path, 'w' ) {|f| f.write(checksum) }
+  File.open(checksum_path, 'w') { |f| f.write(checksum) }
 end
 
 desc 'FFI compiler'
@@ -53,7 +55,7 @@ namespace 'ffi-compiler' do
     t.add_define 'WINDOWS_OS' if FFI::Platform.windows?
   end
 end
-task :compile_ffi => ['ffi-compiler:default']
+task compile_ffi: ['ffi-compiler:default']
 
 CLEAN.include('ext/scrypt/*{.o,.log,.so,.bundle}')
 CLEAN.include('lib/**/*{.o,.log,.so,.bundle}')
@@ -80,4 +82,3 @@ Gem::PackageTask.new(gem_spec) do |pkg|
   pkg.need_tar = true
   pkg.package_dir = 'pkg'
 end
-
