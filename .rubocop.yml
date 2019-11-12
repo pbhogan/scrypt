@@ -17,7 +17,7 @@ AllCops:
     - 'tmp/**/*'
     - 'vendor/**/*.rb'
 
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.3
 
 BlockLength:
   Max: 70
