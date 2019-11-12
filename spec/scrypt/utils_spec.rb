@@ -1,7 +1,9 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "spec_helper"))
+# frozen_string_literal: true
 
-describe "Security Utils" do
-  it "should perform a string comparison" do
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
+
+describe 'Security Utils' do
+  it 'should perform a string comparison' do
     expect(SCrypt::SecurityUtils.secure_compare('a', 'a')).to equal(true)
     expect(SCrypt::SecurityUtils.secure_compare('a', 'b')).to equal(false)
     expect(SCrypt::SecurityUtils.secure_compare('aa', 'aa')).to equal(true)
