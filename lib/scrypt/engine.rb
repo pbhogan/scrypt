@@ -4,7 +4,23 @@ require 'ffi'
 require 'openssl'
 
 module SCrypt
+  module Ext
+    # rubocop:disable Style/SymbolArray
+    # Bind the external functions
+    attach_function :sc_calibrate,
+                    [:size_t, :double, :double, :pointer],
+                    :int,
+                    blocking: true
+
+    attach_function :crypto_scrypt,
+                    [:pointer, :size_t, :pointer, :size_t, :uint64, :uint32, :uint32, :pointer, :size_t],
+                    :int,
+                    blocking: true # todo
+    # rubocop:enable
+  end
+
   class Engine
+    # rubocop:disable Style/MutableConstant
     DEFAULTS = {
       key_len: 32,
       salt_size: 32,
@@ -13,6 +29,7 @@ module SCrypt
       max_time: 0.2,
       cost: nil
     }
+    # rubocop:enable
 
     class Calibration < FFI::Struct
       layout  :n, :uint64,
