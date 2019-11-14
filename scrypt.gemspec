@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
                    'steve@advancedcontrol.com.au',
                    'rene.vanpaassen@gmail.com',
                    'io+scrypt@jsg.io']
-  s.cert_chain  = ['certs/pbhogan.pem']
+  s.cert_chain  = ['certs/stakach.pem']
   s.license     = 'BSD-3-Clause'
 
   s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
