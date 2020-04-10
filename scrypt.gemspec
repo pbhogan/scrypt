@@ -42,8 +42,6 @@ Gem::Specification.new do |s|
     s.add_development_dependency 'rubocop-performance', '>= 1.5.0', '< 1.6.0'
   end
 
-  s.rubyforge_project = 'scrypt'
-
   s.extensions = ['ext/scrypt/Rakefile']
 
   s.files = %w[Rakefile scrypt.gemspec README.md COPYING] + Dir.glob('{lib,spec,autotest}/**/*')
