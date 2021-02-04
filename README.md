@@ -1,3 +1,4 @@
+G
 scrypt [![Build Status](https://secure.travis-ci.org/pbhogan/scrypt.svg)](http://travis-ci.org/pbhogan/scrypt)
 ======
 
