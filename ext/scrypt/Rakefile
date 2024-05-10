@@ -6,7 +6,7 @@ FFI::Compiler::CompileTask.new('scrypt_ext') do |t|
   t.cflags << '-Wall -std=c99'
   t.cflags << '-msse -msse2' if t.platform.arch.include? '86'
   t.cflags << '-D_GNU_SOURCE=1' if RbConfig::CONFIG['host_os'].downcase =~ /mingw/
-  t.cflags << '-D_POSIX_C_SOURCE=199309L' if RbConfig::CONFIG['host_os'].downcase =~ /linux/
+  t.cflags << '-D_POSIX_C_SOURCE=200809L' if RbConfig::CONFIG['host_os'].downcase =~ /linux/
 
   if 1.size == 4 && target_cpu =~ /i386|x86_32/ && t.platform.mac?
     t.cflags << '-arch i386'
