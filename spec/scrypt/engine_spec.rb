@@ -49,13 +49,13 @@ describe 'Generating SCrypt hashes' do
   end
 
   it 'should raise an InvalidSalt error if the salt is invalid' do
-    expect(-> { SCrypt::Engine.hash_secret(@password, 'nino') }).to raise_error(SCrypt::Errors::InvalidSalt)
+    expect { SCrypt::Engine.hash_secret(@password, 'nino') }.to raise_error(SCrypt::Errors::InvalidSalt)
   end
 
   it 'should raise an InvalidSecret error if the secret is invalid' do
-    expect(-> { SCrypt::Engine.hash_secret(MyInvalidSecret.new, @salt) }).to raise_error(SCrypt::Errors::InvalidSecret)
-    expect(-> { SCrypt::Engine.hash_secret(nil, @salt) }).to_not raise_error
-    expect(-> { SCrypt::Engine.hash_secret(false, @salt) }).to_not raise_error
+    expect { SCrypt::Engine.hash_secret(MyInvalidSecret.new, @salt) }.to raise_error(SCrypt::Errors::InvalidSecret)
+    expect { SCrypt::Engine.hash_secret(nil, @salt) }.to_not raise_error
+    expect { SCrypt::Engine.hash_secret(false, @salt) }.to_not raise_error
   end
 
   it 'should call #to_s on the secret and use the return value as the actual secret data' do

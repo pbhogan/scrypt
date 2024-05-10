@@ -42,7 +42,7 @@ describe 'Reading a hashed password' do
   end
 
   it 'should raise an InvalidHashError when given an invalid hash' do
-    expect(-> { SCrypt::Password.new('not a valid hash') }).to raise_error(SCrypt::Errors::InvalidHash)
+    expect { SCrypt::Password.new('not a valid hash') }.to raise_error(SCrypt::Errors::InvalidHash)
   end
 end
 
