@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
                    'steve@advancedcontrol.com.au',
                    'rene.vanpaassen@gmail.com',
                    'io+scrypt@jsg.io']
-  s.cert_chain  = ['certs/stakach.pem']
+  s.cert_chain  = ['certs/pbhogan.pem']
   s.license     = 'BSD-3-Clause'
 
   s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
@@ -30,7 +30,10 @@ Gem::Specification.new do |s|
     alternative functions such as PBKDF2 or bcrypt.
   DESC
 
+  s.required_ruby_version = '>= 2.3.0'
+
   s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
+  s.add_dependency 'rake', '>= 9', '< 14'
   s.add_development_dependency 'awesome_print', '>= 1', '< 2'
   s.add_development_dependency 'rake', '>= 9', '< 14'
   s.add_development_dependency 'rdoc', '>= 4', '< 5'
