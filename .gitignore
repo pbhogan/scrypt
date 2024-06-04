@@ -240,3 +240,4 @@ fabric.properties
 # End of https://www.gitignore.io/api/c,ruby,macos,rubymine,visualstudiocode
 
 *.bundle
+/.idea
