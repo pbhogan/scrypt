@@ -36,7 +36,12 @@ warnp_setprogname(const char * progname)
 			p = progname + 1;
 
 	/* Copy the name string. */
-	name = strdup(p);
+	name = malloc(strlen(p) + 1);
+	if (name == NULL) {
+		/* No cleanup handler needs to be registered on failure. */
+		return;
+	}
+	strcpy(name, p);
 
 	/* If we haven't already done so, register our exit handler. */
 	if (initialized == 0) {
