@@ -69,8 +69,8 @@ rd = Rake::RDocTask.new do |rdoc|
 end
 
 desc 'Run all specs'
-RSpec::Core::RakeTask.new do |_t|
-  rspec_opts = ['--colour', '--backtrace']
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.rspec_opts = ['--colour', '--backtrace']
 end
 
 def gem_spec

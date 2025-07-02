@@ -33,9 +33,9 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.3.0'
 
   s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
-  s.add_dependency 'rake', '>= 9', '< 14'
+  s.add_dependency 'rake', '>= 13.0.1', '< 14'
   s.add_development_dependency 'awesome_print', '>= 1', '< 2'
-  s.add_development_dependency 'rake', '>= 9', '< 14'
+  s.add_development_dependency 'rake', '>= 13.0.1', '< 14'
   s.add_development_dependency 'rdoc', '>= 4', '< 5'
   s.add_development_dependency 'rspec', '>= 3', '< 4'
 
