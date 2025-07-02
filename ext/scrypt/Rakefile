@@ -2,7 +2,8 @@ require 'ffi-compiler/compile_task'
 
 target_cpu = RbConfig::CONFIG['target_cpu']
 
-FFI::Compiler::CompileTask.new('scrypt_ext') do |t|
+FFI::Compiler::CompileTask.new do |t|
+  t.name = 'scrypt_ext'
   t.cflags << '-Wall -std=c99'
   t.cflags << '-msse -msse2' if t.platform.arch.include? '86'
   t.cflags << '-D_GNU_SOURCE=1' if RbConfig::CONFIG['host_os'].downcase =~ /mingw/
