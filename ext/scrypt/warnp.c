@@ -41,7 +41,8 @@ warnp_setprogname(const char * progname)
 		/* No cleanup handler needs to be registered on failure. */
 		return;
 	}
-	strcpy(name, p);
+	strncpy(name, p, strlen(p) + 1);
+	name[strlen(p)] = '\0';  /* Ensure null termination */
 
 	/* If we haven't already done so, register our exit handler. */
 	if (initialized == 0) {
