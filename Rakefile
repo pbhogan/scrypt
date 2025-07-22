@@ -2,45 +2,57 @@
 
 require 'bundler/setup'
 require 'bundler/gem_tasks'
-
-require 'rake'
-require 'rake/clean'
-
-require 'rspec/core/rake_task'
+require 'digest/sha2'
 
 require 'ffi'
 require 'ffi-compiler/compile_task'
 
-require 'digest/sha2'
-require './lib/scrypt/version'
+require 'fileutils'
+require 'rake'
+require 'rake/clean'
+require 'rdoc/task'
+
+require 'rspec/core/rake_task'
 
 require 'rubygems'
 require 'rubygems/package_task'
 
-require 'rdoc/task'
+require './lib/scrypt/version'
 
-task default: [:clean, :compile_ffi, :spec]
+task default: %i[clean compile_ffi spec]
 
-desc 'clean, make and run specs'
-task :spec do
-  RSpec::Core::RakeTask.new
+desc 'Run all specs'
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.rspec_opts = ['--color', '--backtrace', '--format', 'documentation']
 end
 
-desc 'generate checksum'
+desc 'Generate checksum for built gem'
 task :checksum do
   built_gem_path = "pkg/scrypt-#{SCrypt::VERSION}.gem"
+
+  unless File.exist?(built_gem_path)
+    puts "Gem file not found: #{built_gem_path}"
+    puts "Run 'rake build' first to create the gem."
+    exit 1
+  end
+
   checksum = Digest::SHA512.new.hexdigest(File.read(built_gem_path))
   checksum_path = "checksum/scrypt-#{SCrypt::VERSION}.gem.sha512"
-  File.open(checksum_path, 'w') { |f| f.write(checksum) }
+
+  # Ensure checksum directory exists
+  FileUtils.mkdir_p(File.dirname(checksum_path))
+
+  File.write(checksum_path, checksum)
+  puts "Checksum written to: #{checksum_path}"
 end
 
-desc 'FFI compiler'
-namespace 'ffi-compiler' do
+desc 'Compile FFI extension'
+namespace :ffi_compiler do
   FFI::Compiler::CompileTask.new('ext/scrypt/scrypt_ext') do |t|
     target_cpu = RbConfig::CONFIG['target_cpu']
 
     t.cflags << '-Wall -std=c99'
-    t.cflags << '-msse -msse2' if t.platform.arch.include? '86'
+    t.cflags << '-msse -msse2' if t.platform.arch.include?('86')
     t.cflags << '-D_GNU_SOURCE=1' if RbConfig::CONFIG['host_os'].downcase =~ /mingw/
     t.cflags << '-D_POSIX_C_SOURCE=200809L' if RbConfig::CONFIG['host_os'].downcase =~ /linux/
 
@@ -55,22 +67,23 @@ namespace 'ffi-compiler' do
     t.add_define 'WINDOWS_OS' if FFI::Platform.windows?
   end
 end
-task compile_ffi: ['ffi-compiler:default']
+task compile_ffi: ['ffi_compiler:default']
 
 CLEAN.include('ext/scrypt/*{.o,.log,.so,.bundle}')
 CLEAN.include('lib/**/*{.o,.log,.so,.bundle}')
 
-desc 'Generate RDoc'
-rd = Rake::RDocTask.new do |rdoc|
+desc 'Generate RDoc documentation'
+RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'doc/rdoc'
-  rdoc.options << '--title' << 'scrypt-ruby' << '--line-numbers' << '--inline-source' << '--main' << 'README'
+  rdoc.options << '--force-update'
+  rdoc.options << '-V'
+
   rdoc.template = ENV['TEMPLATE'] if ENV['TEMPLATE']
-  rdoc.rdoc_files.include('COPYING', 'lib/**/*.rb')
 end
 
 desc 'Run all specs'
 RSpec::Core::RakeTask.new do |_t|
-  rspec_opts = ['--colour', '--backtrace']
+  # Task automatically runs specs based on RSpec defaults
 end
 
 def gem_spec
