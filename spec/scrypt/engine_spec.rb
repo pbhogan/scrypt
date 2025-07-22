@@ -156,15 +156,15 @@ describe 'Input validation' do
     it 'raises ArgumentError for non-positive parameters' do
       expect do
         SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 0, 1, 1, 32)
-      end.to raise_error(ArgumentError, 'n must be positive')
+      end.to raise_error(ArgumentError, 'cpu_cost must be positive')
 
       expect do
         SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 0, 1, 32)
-      end.to raise_error(ArgumentError, 'r must be positive')
+      end.to raise_error(ArgumentError, 'memory_cost must be positive')
 
       expect do
         SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 1, 0, 32)
-      end.to raise_error(ArgumentError, 'p must be positive')
+      end.to raise_error(ArgumentError, 'parallelization must be positive')
 
       expect do
         SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 1, 1,

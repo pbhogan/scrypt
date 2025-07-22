@@ -23,6 +23,13 @@ module SCrypt
   #   @db_password == "a paltry guess"  #=> false
   #
   class Password < String
+    # Key length constraints
+    MIN_KEY_LENGTH = 16
+    MAX_KEY_LENGTH = 512
+    # Salt size constraints
+    MIN_SALT_SIZE = 8
+    MAX_SALT_SIZE = 32
+
     # The hash portion of the stored password hash.
     attr_reader :digest
     # The salt of the store password hash
@@ -57,18 +64,31 @@ module SCrypt
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
 
-        # Clamp minimum/maximum keylen
-        options[:key_len] = 16 if options[:key_len] < 16
-        options[:key_len] = 512 if options[:key_len] > 512
-
-        # Clamp minimum/maximum salt_size
-        options[:salt_size] = 8 if options[:salt_size] < 8
-        options[:salt_size] = 32 if options[:salt_size] > 32
+        options[:key_len] = clamp_key_length(options[:key_len])
+        options[:salt_size] = clamp_salt_size(options[:salt_size])
 
         salt = SCrypt::Engine.generate_salt(options)
         hash = SCrypt::Engine.hash_secret(secret, salt, options[:key_len])
 
         Password.new(hash)
+      end
+
+      private
+
+      # Clamps key length to valid range
+      def clamp_key_length(key_len)
+        return MIN_KEY_LENGTH if key_len < MIN_KEY_LENGTH
+        return MAX_KEY_LENGTH if key_len > MAX_KEY_LENGTH
+
+        key_len
+      end
+
+      # Clamps salt size to valid range
+      def clamp_salt_size(salt_size)
+        return MIN_SALT_SIZE if salt_size < MIN_SALT_SIZE
+        return MAX_SALT_SIZE if salt_size > MAX_SALT_SIZE
+
+        salt_size
       end
     end
 
@@ -91,16 +111,17 @@ module SCrypt
 
     # Returns true if +h+ is a valid hash.
     def valid_hash?(h)
-      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}\$[A-Za-z0-9]{32,1024}$/) != nil
+      !SCrypt::Engine::HASH_PATTERN.match(h).nil?
     end
 
     # call-seq:
     #   split_hash(raw_hash) -> cost, salt, hash
     #
     # Splits +h+ into cost, salt, and hash and returns them in that order.
-    def split_hash(h)
-      n, v, r, salt, hash = h.split('$')
-      [[n, v, r].join('$') + '$', salt, hash]
+    def split_hash(hash_string)
+      cpu_cost, version, memory_cost, salt, hash = hash_string.split('$')
+      cost_string = "#{[cpu_cost, version, memory_cost].join('$')}$"
+      [cost_string, salt, hash]
     end
   end
 end

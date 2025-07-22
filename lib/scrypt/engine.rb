@@ -18,6 +18,15 @@ module SCrypt
   end
 
   class Engine
+    # Regular expressions for validation
+    COST_PATTERN = /^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$$/.freeze
+    SALT_PATTERN = /^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}$/.freeze
+    HASH_PATTERN = /^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}\$[A-Za-z0-9]{32,1024}$/.freeze
+
+    # Constants for salt handling
+    OLD_STYLE_SALT_LENGTH = 40
+    SALT_MIN_LENGTH = 16
+
     DEFAULTS = {
       key_len: 32,
       salt_size: 32,
@@ -42,18 +51,16 @@ module SCrypt
 
     class << self
       def scrypt(secret, salt, *args)
-        if args.length == 2
+        case args.length
+        when 2
           # args is [cost_string, key_len]
-          n, r, p = args[0].split('$').map { |x| x.to_i(16) }
-          key_len = args[1]
-
-          __sc_crypt(secret, salt, n, r, p, key_len)
-        elsif args.length == 4
+          cost_string, key_len = args
+          cpu_cost, memory_cost, parallelization = parse_cost_string(cost_string)
+          __sc_crypt(secret, salt, cpu_cost, memory_cost, parallelization, key_len)
+        when 4
           # args is [n, r, p, key_len]
-          n, r, p = args[0, 3]
-          key_len = args[3]
-
-          __sc_crypt(secret, salt, n, r, p, key_len)
+          cpu_cost, memory_cost, parallelization, key_len = args
+          __sc_crypt(secret, salt, cpu_cost, memory_cost, parallelization, key_len)
         else
           raise ArgumentError, 'invalid number of arguments (4 or 6)'
         end
@@ -65,15 +72,12 @@ module SCrypt
         raise Errors::InvalidSalt, 'invalid salt' unless valid_salt?(salt)
 
         cost = autodetect_cost(salt)
-        salt_only = salt[/\$([A-Za-z0-9]{16,64})$/, 1]
+        salt_only = extract_salt_from_string(salt)
 
-        if salt_only.length == 40
-          # Old-style hash with 40-character salt
-          salt + '$' + Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))
+        if old_style_hash?(salt_only)
+          generate_old_style_hash(secret, salt, cost)
         else
-          # New-style hash
-          salt_only = [salt_only.sub(/^(00)+/, '')].pack('H*')
-          salt + '$' + scrypt(secret.to_s, salt_only, cost, key_len).unpack('H*').first.rjust(key_len * 2, '0')
+          generate_new_style_hash(secret, salt, salt_only, cost, key_len)
         end
       end
 
@@ -85,23 +89,20 @@ module SCrypt
       def generate_salt(options = {})
         options = DEFAULTS.merge(options)
         cost = options[:cost] || @calibrated_cost || calibrate(options)
-        salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16, '0')
+        salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(SALT_MIN_LENGTH, '0')
 
-        if salt.length == 40
-          # If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
-          salt = '0' + salt
-        end
+        salt = avoid_old_style_collision(salt)
         cost + salt
       end
 
       # Returns true if +cost+ is a valid cost, false if not.
       def valid_cost?(cost)
-        cost.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$$/) != nil
+        !COST_PATTERN.match(cost).nil?
       end
 
       # Returns true if +salt+ is a valid salt, false if not.
       def valid_salt?(salt)
-        salt.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}$/) != nil
+        !SALT_PATTERN.match(salt).nil?
       end
 
       # Returns true if +secret+ is a valid secret, false if not.
@@ -136,8 +137,8 @@ module SCrypt
 
       # Computes the memory use of the given +cost+
       def memory_use(cost)
-        n, r, p = cost.split('$').map { |i| i.to_i(16) }
-        (128 * r * p) + (256 * r) + (128 * r * n)
+        cpu_cost, memory_cost, parallelization = parse_cost_string(cost)
+        (128 * memory_cost * parallelization) + (256 * memory_cost) + (128 * memory_cost * cpu_cost)
       end
 
       # Autodetects the cost from the salt string.
@@ -147,8 +148,45 @@ module SCrypt
 
       private
 
+      # Extracts the salt portion from a salt string
+      def extract_salt_from_string(salt)
+        salt[/\$([A-Za-z0-9]{16,64})$/, 1]
+      end
+
+      # Checks if this is an old-style hash based on salt length
+      def old_style_hash?(salt_only)
+        salt_only.length == OLD_STYLE_SALT_LENGTH
+      end
+
+      # Generates old-style hash with SHA1
+      def generate_old_style_hash(secret, salt, cost)
+        "#{salt}$#{Digest::SHA1.hexdigest(scrypt(secret.to_s, salt, cost, 256))}"
+      end
+
+      # Generates new-style hash
+      def generate_new_style_hash(secret, salt, salt_only, cost, key_len)
+        processed_salt = [salt_only.sub(/^(00)+/, '')].pack('H*')
+        hash_bytes = scrypt(secret.to_s, processed_salt, cost, key_len)
+        "#{salt}$#{hash_bytes.unpack('H*').first.rjust(key_len * 2, '0')}"
+      end
+
+      # Avoids collision with old-style hash detection
+      def avoid_old_style_collision(salt)
+        if salt.length == OLD_STYLE_SALT_LENGTH
+          # If salt is 40 characters, the regexp will think that it is an old-style hash, so add a '0'.
+          "0#{salt}"
+        else
+          salt
+        end
+      end
+
+      # Parses a cost string into its component values
+      def parse_cost_string(cost_string)
+        cost_string.split('$').map { |component| component.to_i(16) }
+      end
+
       def __sc_calibrate(max_mem, max_memfrac, max_time)
-        raise ArgumentError, 'max_mem must be non-negative' if max_mem < 0
+        raise ArgumentError, 'max_mem must be non-negative' if max_mem.negative?
         raise ArgumentError, 'max_memfrac must be between 0 and 1' unless (0..1).cover?(max_memfrac)
         raise ArgumentError, 'max_time must be positive' if max_time <= 0
 
@@ -160,20 +198,20 @@ module SCrypt
         [calibration[:n], calibration[:r], calibration[:p]]
       end
 
-      def __sc_crypt(secret, salt, n, r, p, key_len)
+      def __sc_crypt(secret, salt, cpu_cost, memory_cost, parallelization, key_len)
         raise ArgumentError, 'secret cannot be nil' if secret.nil?
         raise ArgumentError, 'salt cannot be nil' if salt.nil?
         raise ArgumentError, 'key_len must be positive' if key_len <= 0
-        raise ArgumentError, 'n must be positive' if n <= 0
-        raise ArgumentError, 'r must be positive' if r <= 0
-        raise ArgumentError, 'p must be positive' if p <= 0
+        raise ArgumentError, 'cpu_cost must be positive' if cpu_cost <= 0
+        raise ArgumentError, 'memory_cost must be positive' if memory_cost <= 0
+        raise ArgumentError, 'parallelization must be positive' if parallelization <= 0
 
         result = nil
 
         FFI::MemoryPointer.new(:char, key_len) do |buffer|
           ret_val = SCrypt::Ext.crypto_scrypt(
             secret, secret.bytesize, salt, salt.bytesize,
-            n, r, p,
+            cpu_cost, memory_cost, parallelization,
             buffer, key_len
           )
 
