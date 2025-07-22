@@ -1,0 +1,67 @@
+# SCrypt Test Vectors
+# These are the official test vectors from the scrypt specification
+# Used to verify our implementation matches the reference
+
+scrypt_vectors:
+  - description: "Empty string test"
+    password: ""
+    salt: ""
+    n: 16
+    r: 1
+    p: 1
+    key_len: 64
+    expected: "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"
+
+  - description: "Standard test vector"
+    password: "password"
+    salt: "NaCl"
+    n: 1024
+    r: 8
+    p: 16
+    key_len: 64
+    expected: "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"
+
+  - description: "High memory test vector"
+    password: "pleaseletmein"
+    salt: "SodiumChloride"
+    n: 16384
+    r: 8
+    p: 1
+    key_len: 64
+    expected: "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887"
+
+  - description: "Very high memory test (disabled on memory-constrained systems)"
+    password: "pleaseletmein"
+    salt: "SodiumChloride"
+    n: 1048576
+    r: 8
+    p: 1
+    key_len: 64
+    expected: "2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4"
+    skip_reason: "Memory limited systems (like Raspberry Pi) may fail this test"
+
+hash_secret_vectors:
+  - description: "Empty string via hash_secret"
+    password: ""
+    salt: "10$1$1$0000000000000000"
+    key_len: 64
+    expected_pattern: "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"
+
+  - description: "Standard test via hash_secret"
+    password: "password"
+    salt: "400$8$10$000000004e61436c"
+    key_len: 64
+    expected_pattern: "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"
+
+  - description: "High memory test via hash_secret"
+    password: "pleaseletmein"
+    salt: "4000$8$1$536f6469756d43686c6f72696465"
+    key_len: 64
+    expected_pattern: "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887"
+
+  - description: "Very high memory test via hash_secret (disabled)"
+    password: "pleaseletmein"
+    salt: "100000$8$1$536f6469756d43686c6f72696465"
+    key_len: 64
+    expected_pattern: "2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4"
+    skip_reason: "Memory limited systems may fail this test"

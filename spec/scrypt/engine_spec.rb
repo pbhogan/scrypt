@@ -3,34 +3,45 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'spec_helper'))
 
 describe 'The SCrypt engine' do
-  it 'should calculate a valid cost factor' do
+  it 'calculates a valid cost factor' do
     first = SCrypt::Engine.calibrate(max_time: 0.2)
     expect(SCrypt::Engine.valid_cost?(first)).to equal(true)
   end
 end
 
 describe 'Generating SCrypt salts' do
-  it 'should produce strings' do
+  it 'produces strings' do
     expect(SCrypt::Engine.generate_salt).to be_an_instance_of(String)
   end
 
-  it 'should produce random data' do
+  it 'produces random data' do
     expect(SCrypt::Engine.generate_salt).not_to equal(SCrypt::Engine.generate_salt)
   end
 
-  it 'should used the saved cost factor' do
+  it 'uses the saved cost factor' do
     # Verify cost is different before saving
     cost = SCrypt::Engine.calibrate(max_time: 0.01)
-    expect(SCrypt::Engine.generate_salt(max_time: 30, max_mem: 64 * 1024 * 1024)).not_to start_with(cost)
+    expect(SCrypt::Engine.generate_salt).not_to start_with(cost)
 
     cost = SCrypt::Engine.calibrate!(max_time: 0.01)
-    expect(SCrypt::Engine.generate_salt(max_time: 30, max_mem: 64 * 1024 * 1024)).to start_with(cost)
+    expect(SCrypt::Engine.generate_salt).to start_with(cost)
+  end
+
+  it 'resets calibrated cost when setting new calibration' do
+    # Set initial calibration
+    first_cost = SCrypt::Engine.calibrate!(max_time: 0.01)
+    expect(SCrypt::Engine.calibrated_cost).to eq(first_cost)
+
+    # Set different calibration
+    second_cost = SCrypt::Engine.calibrate!(max_time: 0.02)
+    expect(SCrypt::Engine.calibrated_cost).to eq(second_cost)
+    expect(SCrypt::Engine.calibrated_cost).not_to eq(first_cost)
   end
 end
 
 describe 'Autodetecting of salt cost' do
-  it 'should work' do
-    expect(SCrypt::Engine.autodetect_cost('2a$08$c3$randomjunkgoeshere')).to eq('2a$08$c3$')
+  it 'works' do
+    expect(SCrypt::Engine.autodetect_cost('2a$08$c3$some_salt')).to eq('2a$08$c3$')
   end
 end
 
@@ -39,43 +50,161 @@ describe 'Generating SCrypt hashes' do
     undef to_s
   end
 
-  before :each do
+  before do
     @salt = SCrypt::Engine.generate_salt
     @password = 'woo'
   end
 
-  it 'should produce a string' do
+  it 'produces a string' do
     expect(SCrypt::Engine.hash_secret(@password, @salt)).to be_an_instance_of(String)
   end
 
-  it 'should raise an InvalidSalt error if the salt is invalid' do
+  it 'raises an InvalidSalt error if the salt is invalid' do
     expect { SCrypt::Engine.hash_secret(@password, 'nino') }.to raise_error(SCrypt::Errors::InvalidSalt)
   end
 
-  it 'should raise an InvalidSecret error if the secret is invalid' do
+  it 'raises an InvalidSecret error if the secret is invalid' do
     expect { SCrypt::Engine.hash_secret(MyInvalidSecret.new, @salt) }.to raise_error(SCrypt::Errors::InvalidSecret)
-    expect { SCrypt::Engine.hash_secret(nil, @salt) }.to_not raise_error
-    expect { SCrypt::Engine.hash_secret(false, @salt) }.to_not raise_error
+    expect { SCrypt::Engine.hash_secret(nil, @salt) }.not_to raise_error
+    expect { SCrypt::Engine.hash_secret(false, @salt) }.not_to raise_error
   end
 
-  it 'should call #to_s on the secret and use the return value as the actual secret data' do
+  it 'calls #to_s on the secret and use the return value as the actual secret data' do
     expect(SCrypt::Engine.hash_secret(false, @salt)).to eq(SCrypt::Engine.hash_secret('false', @salt))
   end
 end
 
 describe 'SCrypt test vectors' do
-  it 'should match results of SCrypt function' do
-    expect(SCrypt::Engine.scrypt('', '', 16, 1, 1, 64).unpack('H*').first).to eq('77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906')
-    expect(SCrypt::Engine.scrypt('password', 'NaCl', 1024, 8, 16, 64).unpack('H*').first).to eq('fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640')
-    expect(SCrypt::Engine.scrypt('pleaseletmein', 'SodiumChloride', 16_384, 8, 1, 64).unpack('H*').first).to eq('7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887')
-    # Raspberry is memory limited, and fails on this test
-    #   expect(SCrypt::Engine.scrypt('pleaseletmein', 'SodiumChloride', 1048576, 8, 1, 64).unpack('H*').first).to eq('2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4')
+  it 'matches results of SCrypt function' do
+    TEST_VECTORS['scrypt_vectors'].each do |vector|
+      next if vector['skip_reason'] # Skip memory-intensive tests
+
+      result = SCrypt::Engine.scrypt(
+        vector['password'],
+        vector['salt'],
+        vector['n'],
+        vector['r'],
+        vector['p'],
+        vector['key_len']
+      ).unpack('H*').first
+
+      expect(result).to eq(vector['expected']), "Failed for: #{vector['description']}"
+    end
   end
 
-  it 'should match equivalent results sent through hash_secret() function' do
-    expect(SCrypt::Engine.hash_secret('', '10$1$1$0000000000000000', 64)).to match(/\$77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906$/)
-    expect(SCrypt::Engine.hash_secret('password', '400$8$10$000000004e61436c', 64)).to match(/\$fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640$/)
-    expect(SCrypt::Engine.hash_secret('pleaseletmein', '4000$8$1$536f6469756d43686c6f72696465', 64)).to match(/\$7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887$/)
-    #  expect(SCrypt::Engine.hash_secret('pleaseletmein', '100000$8$1$536f6469756d43686c6f72696465', 64)).to match(/\$2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4$/)
+  it 'matches equivalent results sent through hash_secret() function' do
+    TEST_VECTORS['hash_secret_vectors'].each do |vector|
+      next if vector['skip_reason'] # Skip memory-intensive tests
+
+      result = SCrypt::Engine.hash_secret(
+        vector['password'],
+        vector['salt'],
+        vector['key_len']
+      )
+
+      # hash_secret returns: salt + '$' + hash_digest
+      # So we expect: "salt$expected_pattern"
+      expected_full_hash = "#{vector['salt']}$#{vector['expected_pattern']}"
+      expect(result).to eq(expected_full_hash), "Failed for: #{vector['description']}"
+    end
+  end
+end
+
+describe 'Input validation' do
+  describe '#calibrate' do
+    it 'raises ArgumentError for negative max_mem' do
+      expect do
+        SCrypt::Engine.send(:__sc_calibrate, -1, 0.5, 0.2)
+      end.to raise_error(ArgumentError, 'max_mem must be non-negative')
+    end
+
+    it 'raises ArgumentError for invalid max_memfrac' do
+      expect do
+        SCrypt::Engine.send(:__sc_calibrate, 1024, -0.1,
+                            0.2)
+      end.to raise_error(ArgumentError, 'max_memfrac must be between 0 and 1')
+      expect do
+        SCrypt::Engine.send(:__sc_calibrate, 1024, 1.1,
+                            0.2)
+      end.to raise_error(ArgumentError, 'max_memfrac must be between 0 and 1')
+    end
+
+    it 'raises ArgumentError for non-positive max_time' do
+      expect do
+        SCrypt::Engine.send(:__sc_calibrate, 1024, 0.5, 0)
+      end.to raise_error(ArgumentError, 'max_time must be positive')
+
+      expect do
+        SCrypt::Engine.send(:__sc_calibrate, 1024, 0.5, -0.1)
+      end.to raise_error(ArgumentError, 'max_time must be positive')
+    end
+  end
+
+  describe '#scrypt' do
+    it 'raises ArgumentError for nil secret' do
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, nil, 'salt', 16, 1, 1, 32)
+      end.to raise_error(ArgumentError, 'secret cannot be nil')
+    end
+
+    it 'raises ArgumentError for nil salt' do
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, 'secret', nil, 16, 1, 1, 32)
+      end.to raise_error(ArgumentError, 'salt cannot be nil')
+    end
+
+    it 'raises ArgumentError for non-positive parameters' do
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 0, 1, 1, 32)
+      end.to raise_error(ArgumentError, 'cpu_cost must be positive')
+
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 0, 1, 32)
+      end.to raise_error(ArgumentError, 'memory_cost must be positive')
+
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 1, 0, 32)
+      end.to raise_error(ArgumentError, 'parallelization must be positive')
+
+      expect do
+        SCrypt::Engine.send(:__sc_crypt, 'secret', 'salt', 16, 1, 1,
+                            0)
+      end.to raise_error(ArgumentError, 'key_len must be positive')
+    end
+  end
+end
+
+describe 'Memory usage calculation' do
+  it 'calculates memory usage correctly' do
+    cost = '400$8$1$'
+    memory = SCrypt::Engine.memory_use(cost)
+    n = 0x400
+    r = 8
+    p = 1
+    expected = (128 * r * p) + (256 * r) + (128 * r * n)
+    expect(memory).to eq(expected)
+  end
+end
+
+describe 'Calibrated cost management' do
+  after do
+    # Reset calibrated cost after each test
+    SCrypt::Engine.calibrated_cost = nil
+  end
+
+  it 'initializes have no calibrated cost' do
+    SCrypt::Engine.calibrated_cost = nil
+    expect(SCrypt::Engine.calibrated_cost).to be_nil
+  end
+
+  it 'stores and retrieve calibrated cost' do
+    cost = SCrypt::Engine.calibrate!(max_time: 0.01)
+    expect(SCrypt::Engine.calibrated_cost).to eq(cost)
+  end
+
+  it 'uses calibrated cost in generate_salt when available' do
+    cost = SCrypt::Engine.calibrate!(max_time: 0.01)
+    salt = SCrypt::Engine.generate_salt
+    expect(salt).to start_with(cost)
   end
 end

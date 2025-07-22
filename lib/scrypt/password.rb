@@ -23,6 +23,13 @@ module SCrypt
   #   @db_password == "a paltry guess"  #=> false
   #
   class Password < String
+    # Key length constraints
+    MIN_KEY_LENGTH = 16
+    MAX_KEY_LENGTH = 512
+    # Salt size constraints
+    MIN_SALT_SIZE = 8
+    MAX_SALT_SIZE = 32
+
     # The hash portion of the stored password hash.
     attr_reader :digest
     # The salt of the store password hash
@@ -32,14 +39,23 @@ module SCrypt
 
     class << self
       # Hashes a secret, returning a SCrypt::Password instance.
-      # Takes five options (optional), which will determine the salt/key's length and the cost limits of the computation.
-      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate. The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum is 512 bytes (4096 bits).
-      # <tt>:salt_size</tt> specifies the size in bytes of the random salt you want to generate. The default and minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
+      # Takes five options (optional), which will determine the salt/key's length and
+      # the cost limits of the computation.
+      # <tt>:key_len</tt> specifies the length in bytes of the key you want to generate.
+      # The default is 32 bytes (256 bits). Minimum is 16 bytes (128 bits). Maximum is 512 bytes (4096 bits).
+      # <tt>:salt_size</tt> specifies the size in bytes of the random salt you want to generate.
+      # The default and minimum is 8 bytes (64 bits). Maximum is 32 bytes (256 bits).
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
-      # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
-      # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
-      # The scrypt key derivation function is designed to be far more secure against hardware brute-force attacks than alternative functions such as PBKDF2 or bcrypt.
-      # The designers of scrypt estimate that on modern (2009) hardware, if 5 seconds are spent computing a derived key, the cost of a hardware brute-force attack against scrypt is roughly 4000 times greater than the cost of a similar attack against bcrypt (to find the same password), and 20000 times greater than a similar attack against PBKDF2.
+      # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take.
+      # A value of 0 specifies no upper limit. The minimum is always 1 MB.
+      # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use.
+      # Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
+      # The scrypt key derivation function is designed to be far more secure against hardware
+      # brute-force attacks than alternative functions such as PBKDF2 or bcrypt.
+      # The designers of scrypt estimate that on modern (2009) hardware, if 5 seconds are spent
+      # computing a derived key, the cost of a hardware brute-force attack against scrypt is roughly
+      # 4000 times greater than the cost of a similar attack against bcrypt (to find the same password),
+      # and 20000 times greater than a similar attack against PBKDF2.
       # Default options will result in calculation time of approx. 200 ms with 1 MB memory use.
       #
       # Example:
@@ -48,18 +64,31 @@ module SCrypt
       def create(secret, options = {})
         options = SCrypt::Engine::DEFAULTS.merge(options)
 
-        # Clamp minimum/maximum keylen
-        options[:key_len] = 16 if options[:key_len] < 16
-        options[:key_len] = 512 if options[:key_len] > 512
-
-        # Clamp minimum/maximum salt_size
-        options[:salt_size] = 8 if options[:salt_size] < 8
-        options[:salt_size] = 32 if options[:salt_size] > 32
+        options[:key_len] = clamp_key_length(options[:key_len])
+        options[:salt_size] = clamp_salt_size(options[:salt_size])
 
         salt = SCrypt::Engine.generate_salt(options)
         hash = SCrypt::Engine.hash_secret(secret, salt, options[:key_len])
 
         Password.new(hash)
+      end
+
+      private
+
+      # Clamps key length to valid range
+      def clamp_key_length(key_len)
+        return MIN_KEY_LENGTH if key_len < MIN_KEY_LENGTH
+        return MAX_KEY_LENGTH if key_len > MAX_KEY_LENGTH
+
+        key_len
+      end
+
+      # Clamps salt size to valid range
+      def clamp_salt_size(salt_size)
+        return MIN_SALT_SIZE if salt_size < MIN_SALT_SIZE
+        return MAX_SALT_SIZE if salt_size > MAX_SALT_SIZE
+
+        salt_size
       end
     end
 
@@ -82,16 +111,17 @@ module SCrypt
 
     # Returns true if +h+ is a valid hash.
     def valid_hash?(h)
-      h.match(/^[0-9a-z]+\$[0-9a-z]+\$[0-9a-z]+\$[A-Za-z0-9]{16,64}\$[A-Za-z0-9]{32,1024}$/) != nil
+      !SCrypt::Engine::HASH_PATTERN.match(h).nil?
     end
 
     # call-seq:
     #   split_hash(raw_hash) -> cost, salt, hash
     #
     # Splits +h+ into cost, salt, and hash and returns them in that order.
-    def split_hash(h)
-      n, v, r, salt, hash = h.split('$')
-      [[n, v, r].join('$') + '$', salt, hash]
+    def split_hash(hash_string)
+      cpu_cost, version, memory_cost, salt, hash = hash_string.split('$')
+      cost_string = "#{[cpu_cost, version, memory_cost].join('$')}$"
+      [cost_string, salt, hash]
     end
   end
 end

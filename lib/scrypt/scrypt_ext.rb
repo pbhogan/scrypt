@@ -7,6 +7,10 @@ module SCrypt
   module Ext
     extend FFI::Library
 
-    ffi_lib FFI::Compiler::Loader.find('scrypt_ext')
+    begin
+      ffi_lib FFI::Compiler::Loader.find('scrypt_ext')
+    rescue LoadError => e
+      raise LoadError, "Failed to load scrypt extension library: #{e.message}"
+    end
   end
 end

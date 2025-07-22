@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-# rubocop:disable Performance/EndWith, Style/SpecialGlobalVars
-
-$:.push File.expand_path("../lib", __FILE__)
+$:.push File.expand_path('lib', __dir__)
 require 'scrypt/version'
 
 Gem::Specification.new do |s|
@@ -20,6 +18,7 @@ Gem::Specification.new do |s|
   s.license     = 'BSD-3-Clause'
 
   s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
+  s.metadata['rubygems_mfa_required'] = 'true'
 
   s.homepage    = 'https://github.com/pbhogan/scrypt'
   s.summary     = 'scrypt password hashing algorithm.'
@@ -33,24 +32,11 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.3.0'
 
   s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
-  s.add_dependency 'rake', '>= 9', '< 14'
-  s.add_development_dependency 'awesome_print', '>= 1', '< 2'
-  s.add_development_dependency 'rake', '>= 9', '< 14'
-  s.add_development_dependency 'rdoc', '>= 4', '< 5'
-  s.add_development_dependency 'rspec', '>= 3', '< 4'
-
-  if RUBY_VERSION >= '2.5'
-    s.add_development_dependency 'rubocop', '>= 0.76.0', '< 1.0.0'
-    s.add_development_dependency 'rubocop-gitlab-security', '>= 0.1.1', '< 0.2'
-    s.add_development_dependency 'rubocop-performance', '>= 1.5.0', '< 1.6.0'
-  end
+  s.add_dependency 'rake', '>= 12.3.3'
 
   s.extensions = ['ext/scrypt/Rakefile']
 
-  s.files = %w[Rakefile scrypt.gemspec README.md COPYING] + Dir.glob('{lib,spec,autotest}/**/*')
+  s.files = %w[Rakefile scrypt.gemspec README.md COPYING] + Dir.glob('{lib,spec}/**/*')
   s.files += Dir.glob('ext/scrypt/*')
-  s.test_files = Dir.glob('spec/**/*')
   s.require_paths = ['lib']
 end
-
-# rubocop:enable
