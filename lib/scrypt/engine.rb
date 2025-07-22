@@ -5,22 +5,19 @@ require 'openssl'
 
 module SCrypt
   module Ext
-    # rubocop:disable Style/SymbolArray
     # Bind the external functions
     attach_function :sc_calibrate,
-                    [:size_t, :double, :double, :pointer],
+                    %i[size_t double double pointer],
                     :int,
                     blocking: true
 
     attach_function :crypto_scrypt,
-                    [:pointer, :size_t, :pointer, :size_t, :uint64, :uint32, :uint32, :pointer, :size_t],
+                    %i[pointer size_t pointer size_t uint64 uint32 uint32 pointer size_t],
                     :int,
-                    blocking: true # todo
-    # rubocop:enable
+                    blocking: true # Use blocking: true for CPU-intensive operations to avoid GIL issues
   end
 
   class Engine
-    # rubocop:disable Style/MutableConstant
     DEFAULTS = {
       key_len: 32,
       salt_size: 32,
@@ -28,8 +25,14 @@ module SCrypt
       max_memfrac: 0.5,
       max_time: 0.2,
       cost: nil
-    }
-    # rubocop:enable
+    }.freeze
+
+    # Class variable to store calibrated cost, separate from defaults
+    @calibrated_cost = nil
+
+    class << self
+      attr_accessor :calibrated_cost
+    end
 
     class Calibration < FFI::Struct
       layout  :n, :uint64,
@@ -81,7 +84,7 @@ module SCrypt
       # <tt>:cost</tt> is a cost string returned by SCrypt::Engine.calibrate
       def generate_salt(options = {})
         options = DEFAULTS.merge(options)
-        cost = options[:cost] || calibrate(options)
+        cost = options[:cost] || @calibrated_cost || calibrate(options)
         salt = OpenSSL::Random.random_bytes(options[:salt_size]).unpack('H*').first.rjust(16, '0')
 
         if salt.length == 40
@@ -110,8 +113,10 @@ module SCrypt
       #
       # Options:
       # <tt>:max_time</tt> specifies the maximum number of seconds the computation should take.
-      # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take. A value of 0 specifies no upper limit. The minimum is always 1 MB.
-      # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use. Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
+      # <tt>:max_mem</tt> specifies the maximum number of bytes the computation should take.
+      # A value of 0 specifies no upper limit. The minimum is always 1 MB.
+      # <tt>:max_memfrac</tt> specifies the maximum memory in a fraction of available resources to use.
+      # Any value equal to 0 or greater than 0.5 will result in 0.5 being used.
       #
       # Example:
       #
@@ -126,7 +131,7 @@ module SCrypt
       # Calls SCrypt::Engine.calibrate and saves the cost string for future calls to
       # SCrypt::Engine.generate_salt.
       def calibrate!(options = {})
-        DEFAULTS[:cost] = calibrate(options)
+        @calibrated_cost = calibrate(options)
       end
 
       # Computes the memory use of the given +cost+
@@ -143,17 +148,26 @@ module SCrypt
       private
 
       def __sc_calibrate(max_mem, max_memfrac, max_time)
-        result = nil
+        raise ArgumentError, 'max_mem must be non-negative' if max_mem < 0
+        raise ArgumentError, 'max_memfrac must be between 0 and 1' unless (0..1).cover?(max_memfrac)
+        raise ArgumentError, 'max_time must be positive' if max_time <= 0
 
         calibration = Calibration.new
         ret_val = SCrypt::Ext.sc_calibrate(max_mem, max_memfrac, max_time, calibration)
 
-        raise "calibration error #{result}" unless ret_val.zero?
+        raise "calibration error: return value #{ret_val}" unless ret_val.zero?
 
         [calibration[:n], calibration[:r], calibration[:p]]
       end
 
       def __sc_crypt(secret, salt, n, r, p, key_len)
+        raise ArgumentError, 'secret cannot be nil' if secret.nil?
+        raise ArgumentError, 'salt cannot be nil' if salt.nil?
+        raise ArgumentError, 'key_len must be positive' if key_len <= 0
+        raise ArgumentError, 'n must be positive' if n <= 0
+        raise ArgumentError, 'r must be positive' if r <= 0
+        raise ArgumentError, 'p must be positive' if p <= 0
+
         result = nil
 
         FFI::MemoryPointer.new(:char, key_len) do |buffer|
@@ -163,7 +177,7 @@ module SCrypt
             buffer, key_len
           )
 
-          raise "scrypt error #{ret_val}" unless ret_val.zero?
+          raise "scrypt error: return value #{ret_val}" unless ret_val.zero?
 
           result = buffer.read_string(key_len)
         end
