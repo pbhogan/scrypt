@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.3.0'
 
   s.add_dependency 'ffi-compiler', '>= 1.0', '< 2.0'
-  s.add_dependency 'rake', '>= 12.3.3'
+  s.add_dependency 'rake', '~> 13'
 
   s.extensions = ['ext/scrypt/Rakefile']
 
